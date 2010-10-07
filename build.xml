@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="learnavro" default="compile" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
+    <description>
+        simple example build file
+    </description>
+  <!-- set global properties for this build -->
+  <property name="src" location="src"/>
+  <property name="build" location="build"/>
+  <property name="build.classes" location="build"/>
+  <property name="test.src" location="test"/>
+  <property name="test.build" location="build/test"/>
+  <property name="lib" location="${build}/ivy/lib/learnavro/default"/>
+  <property name="dist"  location="dist"/>
+  <property name="test.include" value="Test*"/>
+
+  <property name="test.build.data" value="${test.build}/data" />
+  <property name="test.cache.data" value="${test.build}/cache" />
+  <property name="test.debug.data" value="${test.build}/debug" />
+
+  <path id="classpath">
+    <pathelement location="${build.classes}" />
+    <fileset dir="${lib}" >
+      <include name="**/*.jar" />
+      <exclude name="**/excluded/" />
+    </fileset>
+  </path>
+
+  <!-- the unit test classpath: uses test.src.dir for configuration -->
+  <path id="test.classpath">
+    <pathelement location="${test.build}" />
+    <pathelement location="${test.src}" />
+    <pathelement location="${build}" />
+    <path refid="classpath"/>
+  </path>
+	
+	<!-- Load all the default properties, and any the user wants    -->
+	<!-- to contribute (without having to type -D or edit this file -->
+	<property file="${user.home}/build.properties" />
+	<property file="${basedir}/build.properties" />
+	<property name="src.dir" value="${basedir}/src"/>
+	
+	  <!-- IVY properteis set here -->
+	  <property name="ivy.dir" location="ivy" />
+	  <loadproperties srcfile="${ivy.dir}/libraries.properties"/>
+	  <property name="ivy.jar" location="${ivy.dir}/ivy-${ivy.version}.jar"/>
+	  <property name="ivy_repo_url" value="http://repo2.maven.org/maven2/org/apache/ivy/ivy/${ivy.version}/ivy-${ivy.version}.jar"/>
+	  <property name="ivysettings.xml" location="${ivy.dir}/ivysettings.xml" />
+	  <property name="ivy.org" value="org.apache.hadoop"/>
+	  <property name="build.dir" location="build" />
+	  <property name="dist.dir" value="${build.dir}/${final.name}"/>
+	  <property name="build.ivy.dir" location="${build.dir}/ivy" />
+	  <property name="build.ivy.lib.dir" location="${build.ivy.dir}/lib" />
+	  <property name="common.ivy.lib.dir" location="${build.ivy.lib.dir}/${ant.project.name}/common"/>
+	  <property name="build.ivy.report.dir" location="${build.ivy.dir}/report" />
+	  <property name="build.ivy.maven.dir" location="${build.ivy.dir}/maven" />
+	  <property name="build.ivy.maven.pom" location="${build.ivy.maven.dir}/hadoop-core-${hadoop.version}.pom" />
+	  <property name="build.ivy.maven.jar" location="${build.ivy.maven.dir}/hadoop-core-${hadoop.version}.jar" />
+
+	  <!--this is the naming policy for artifacts we want pulled down-->
+	  <property name="ivy.artifact.retrieve.pattern" value="${ant.project.name}/[conf]/[artifact]-[revision].[ext]"/>
+
+	  <!--this is how artifacts that get built are named-->
+	  <property name="ivy.publish.pattern" value="hadoop-[revision]-core.[ext]"/>
+	  <property name="hadoop.jar" location="${build.dir}/hadoop-${hadoop.version}-core.jar" />
+	
+	
+	  <target name="ivy-init-dirs">
+	    <mkdir dir="${build.ivy.dir}" />
+	    <mkdir dir="${build.ivy.lib.dir}" />
+	    <mkdir dir="${build.ivy.report.dir}" />
+	    <mkdir dir="${build.ivy.maven.dir}" />
+	  </target>
+
+	  <target name="ivy-probe-antlib" >
+	    <condition property="ivy.found">
+	      <typefound uri="antlib:org.apache.ivy.ant" name="cleancache"/>
+	    </condition>
+	  </target>
+
+	  <target name="ivy-download" description="To download ivy" unless="offline">
+	    <get src="${ivy_repo_url}" dest="${ivy.jar}" usetimestamp="true"/>
+	  </target>
+
+	  <target name="ivy-init-antlib" depends="ivy-download,ivy-init-dirs,ivy-probe-antlib" unless="ivy.found">
+	    <typedef uri="antlib:org.apache.ivy.ant" onerror="fail"
+	      loaderRef="ivyLoader">
+	      <classpath>
+	        <pathelement location="${ivy.jar}"/>
+	      </classpath>
+	    </typedef>
+	    <fail >
+	      <condition >
+	        <not>
+	          <typefound uri="antlib:org.apache.ivy.ant" name="cleancache"/>
+	        </not>
+	      </condition>
+	      You need Apache Ivy 2.0 or later from http://ant.apache.org/
+	      It could not be loaded from ${ivy_repo_url}
+	    </fail>
+	  </target>
+
+
+	  <target name="ivy-init" depends="ivy-init-antlib" >
+
+	    <!--Configure Ivy by reading in the settings file
+	        If anyone has already read in a settings file into this settings ID, it gets priority
+	    -->
+	    <ivy:configure settingsid="${ant.project.name}.ivy.settings" file="${ivysettings.xml}" override='false'/>
+	  </target>
+	
+
+	  <target name="ivy-resolve" depends="ivy-init">
+	    <ivy:resolve settingsRef="${ant.project.name}.ivy.settings"/>
+	  </target>
+
+	  <target name="ivy-resolve-javadoc" depends="ivy-init">
+	    <ivy:resolve settingsRef="${ant.project.name}.ivy.settings" conf="javadoc"/>
+	  </target>
+
+	  <target name="ivy-resolve-releaseaudit" depends="ivy-init">
+	    <ivy:resolve settingsRef="${ant.project.name}.ivy.settings" conf="releaseaudit"/>
+	  </target>
+
+	  <target name="ivy-resolve-test" depends="ivy-init">
+	    <ivy:resolve settingsRef="${ant.project.name}.ivy.settings" conf="test" />
+	  </target>
+
+	  <target name="ivy-resolve-common" depends="ivy-init">
+	    <ivy:resolve settingsRef="${ant.project.name}.ivy.settings" conf="common" />
+	  </target>
+
+	  <target name="ivy-resolve-jdiff" depends="ivy-init">
+	    <ivy:resolve settingsRef="${ant.project.name}.ivy.settings" conf="jdiff" />
+	  </target>
+
+	  <target name="ivy-resolve-checkstyle" depends="ivy-init">
+	    <ivy:resolve settingsRef="${ant.project.name}.ivy.settings" conf="checkstyle"/>
+	  </target>
+
+	  <target name="ivy-retrieve" depends="ivy-resolve"
+	    description="Retrieve Ivy-managed artifacts">
+	    <ivy:retrieve settingsRef="${ant.project.name}.ivy.settings"
+	      pattern="${build.ivy.lib.dir}/${ivy.artifact.retrieve.pattern}"/>
+	  </target>
+
+	  <target name="ivy-retrieve-checkstyle" depends="ivy-resolve-checkstyle"
+	    description="Retrieve Ivy-managed artifacts for the checkstyle configurations">
+	    <ivy:retrieve settingsRef="${ant.project.name}.ivy.settings"
+	      pattern="${build.ivy.lib.dir}/${ivy.artifact.retrieve.pattern}"/>
+	    <ivy:cachepath pathid="checkstyle-classpath" conf="checkstyle"/>
+	  </target>
+
+	  <target name="ivy-retrieve-jdiff" depends="ivy-resolve-jdiff"
+	    description="Retrieve Ivy-managed artifacts for the javadoc configurations">
+	    <ivy:retrieve settingsRef="${ant.project.name}.ivy.settings"
+	      pattern="${build.ivy.lib.dir}/${ivy.artifact.retrieve.pattern}"/>
+	    <ivy:cachepath pathid="jdiff-classpath" conf="jdiff"/>
+	  </target>
+
+	  <target name="ivy-retrieve-javadoc" depends="ivy-resolve-javadoc"
+	    description="Retrieve Ivy-managed artifacts for the javadoc configurations">
+	    <ivy:retrieve settingsRef="${ant.project.name}.ivy.settings"
+	      pattern="${build.ivy.lib.dir}/${ivy.artifact.retrieve.pattern}"/>
+	    <ivy:cachepath pathid="javadoc-classpath" conf="javadoc"/>
+	  </target>
+
+	  <target name="ivy-retrieve-test" depends="ivy-resolve-test"
+	    description="Retrieve Ivy-managed artifacts for the test configurations">
+	    <ivy:retrieve settingsRef="${ant.project.name}.ivy.settings"
+	      pattern="${build.ivy.lib.dir}/${ivy.artifact.retrieve.pattern}"/>
+	    <ivy:cachepath pathid="test.classpath" conf="test"/>
+	  </target>
+
+	  <target name="ivy-retrieve-common" depends="ivy-resolve-common"
+	    description="Retrieve Ivy-managed artifacts for the compile configurations">
+	    <ivy:retrieve settingsRef="${ant.project.name}.ivy.settings"
+	      pattern="${build.ivy.lib.dir}/${ivy.artifact.retrieve.pattern}"/>
+	    <ivy:cachepath pathid="ivy-common.classpath" conf="common"/>
+	  </target>
+
+	  <target name="ivy-retrieve-releaseaudit" depends="ivy-resolve-releaseaudit"
+	    description="Retrieve Ivy-managed artifacts for the compile configurations">
+	    <ivy:retrieve settingsRef="${ant.project.name}.ivy.settings"
+	      pattern="${build.ivy.lib.dir}/${ivy.artifact.retrieve.pattern}" />
+	    <ivy:cachepath pathid="releaseaudit-classpath" conf="releaseaudit"/>
+	    <available classname="${rat.reporting.classname}" 
+	      classpathref="releaseaudit-classpath" property="rat.present" value="true"/>
+	  </target>
+
+	  <target name="ivy-report" depends="ivy-resolve-releaseaudit"
+	    description="Generate">
+	    <ivy:report todir="${build.ivy.report.dir}" settingsRef="${ant.project.name}.ivy.settings"/>
+	    <echo>
+	      Reports generated:${build.ivy.report.dir}
+	    </echo>
+	  </target>
+
+	
+  <target name="init">
+    <!-- Create the time stamp -->
+    <tstamp/>
+    <!-- Create the build directory structure used by compile -->
+    <mkdir dir="${build}"/>
+    <mkdir dir="${test.build}"/>
+  </target>
+
+  <target name="compile" depends="init,ivy-retrieve"
+        description="compile the source " >
+    <!-- Compile the java code from ${src} into ${build} -->
+    <javac 
+       srcdir="${src}" 
+       destdir="${build}" 
+       classpathref="classpath" 
+       debug="true" />
+  </target>
+
+  <target name="compile-test" depends="init,compile"
+        description="compile the test source " >
+    <!-- Compile the java code from ${src} into ${build} -->
+    <javac srcdir="${test.src}" 
+           destdir="${test.build}"
+           classpathref="test.classpath" 
+           debug="true" />
+  </target>
+
+  <target name="test" depends="compile-test" >
+    <junit showoutput="no"
+           printsummary="yes"
+           haltonfailure="no"
+           fork="yes"
+           forkmode="perTest"
+           maxmemory="512m"
+           dir="${basedir}"
+           timeout="900000"
+           errorProperty="tests.failed" failureProperty="tests.failed">
+      <sysproperty key="test.build.data" value="${test.build.data}"/>
+      <sysproperty key="test.cache.data" value="${test.cache.data}"/>    	
+      <sysproperty key="test.debug.data" value="${test.debug.data}"/>
+
+      <classpath refid="test.classpath"/>
+
+      <batchtest todir="${test.build}" unless="testcase">
+        <fileset dir="${test.src}"
+	         includes="**/${test.include}.java"
+		 excludes="**/${test.exclude}.java" />
+      </batchtest>
+      <batchtest todir="${test.build}" if="testcase">
+        <fileset dir="${test.src}" includes="**/${testcase}.java"/>
+      </batchtest>
+    </junit>
+    <fail if="tests.failed">Tests failed!</fail>
+  </target>
+
+  <target name="dist" depends="compile"
+        description="generate the distribution" >
+    <!-- Create the distribution directory -->
+    <mkdir dir="${dist}/lib"/>
+
+    <!-- Put everything in ${build} into the MyProject-${DSTAMP}.jar file -->
+    <jar jarfile="${dist}/lib/learnavro-${DSTAMP}.jar" basedir="${build}"/>
+  </target>
+
+  <target name="clean"
+        description="clean up" >
+    <!-- Delete the ${build} and ${dist} directory trees -->
+    <delete dir="${build}"/>
+    <delete dir="${dist}"/>
+  </target>
+</project>
