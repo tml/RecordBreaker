@@ -1,14 +1,14 @@
 #!/usr/bin/env /bin/bash
 
 ##
-# This script runs core learnavro commands.  It sets up the jar files, paths, etc.
+# This script runs core schemadict commands.  It sets up the jar files, paths, etc.
 #
 #
 function usage {
-  echo "usage: learnavro command [args...]"
+  echo "usage: schemadict command [args...]"
   echo "Commands include: "
-  echo " toavro           Takes a specified data file, figures out its format, and converts to Avro"
-  echo " schema           Takes an Avro file with anonymous fields, suggests field labels"
+  echo " suggest          Takes an avro file with anonymous fields and suggests good labels"
+  echo " dict             Administer the schema dictionary"
   exit -1
 }
 
@@ -16,7 +16,7 @@ CMDPATH=`dirname $0`
 # name of path
 CMDPATH=`dirname $CMDPATH`
 
-LEARNAVRO=$CMDPATH/bin/learnavro
+SCHEMADICT=$CMDPATH/bin/schemadict
 
 CMD="$1"
 if [ -z "$CMD" ]; then
@@ -49,12 +49,12 @@ BINPATH=`dirname $0`
 # name of path
 CMDPATH=`dirname $BINPATH`
 
-if [ -f "${BINPATH}/learnavro-env.sh" ]; then
-    source "$BINPATH/learnavro-env.sh"
+if [ -f "${BINPATH}/schemadict-env.sh" ]; then
+    source "$BINPATH/schemadict-env.sh"
 fi
 
-if [ -z "LEARNAVRO_HOME" ]; then
-    export LEARNAVRO_HOME="$CMDPATH"
+if [ -z "SCHEMADICT_HOME" ]; then
+    export SCHEMADICT_HOME="$CMDPATH"
 fi
 
 if [ "$cygwin" == false ] ; then
@@ -63,13 +63,13 @@ if [ "$cygwin" == false ] ; then
   # conf dir first in the class path in order to ensure we get flume log4j.properties
   CLASSPATH=""
 
-  if [ -n "LEARNAVRO_CLASSPATH" ]; then
-      CLASSPATH+=":${LEARNAVRO_CLASSPATH}"
+  if [ -n "SCHEMADICT_CLASSPATH" ]; then
+      CLASSPATH+=":${SCHEMADICT_CLASSPATH}"
   fi
 
   JOPTS+="-Djava.library.path=$CMDPATH/build/test:$CMDPATH/build"
 
-  append_jars_onto_classpath "$CMDPATH/build/ivy/lib/learnavro/default"
+  append_jars_onto_classpath "$CMDPATH/build/ivy/lib/schemadict/default"
   append_jars_onto_classpath "$CMDPATH/build"
 
   CLASSPATH+=":$JAVA_HOME/lib/tools.jar"
@@ -78,7 +78,7 @@ if [ "$cygwin" == false ] ; then
 
   append_jars_onto_classpath "${CMDPATH/build}"
   append_jars_onto_classpath "${CMDPATH/build/test}"
-  append_jars_onto_classpath "${LEARNAVRO_HOME}"
+  append_jars_onto_classpath "${SCHEMADICT_HOME}"
 else
   # windows with cygwin
   JOPTS+="-Djava.library.path=`cygpath -d $CMDPATH/lib` "
@@ -101,12 +101,10 @@ shift
 
 if [ "$CMD" = "-h" ] ; then
   usage
-elif [ "$CMD" = "toavro" ] ; then
-  exec java $JOPTS $UOPTS -classpath "$CLASSPATH" com.cloudera.learnavro.SchemaSuggest "$@"
-elif [ "$CMD" = "schema" ] ; then
-  exec java $JOPTS $UOPTS -classpath "$CLASSPATH" com.cloudera.learnavro.SchemaSuggest "$@"
-elif [ "$CMD" = "gentest" ] ; then
-  exec java $JOPTS $UOPTS -classpath "$CLASSPATH" com.cloudera.learnavro.test.GenerateTestAvro "$@"
+elif [ "$CMD" = "suggest" ] ; then
+  exec java $JOPTS $UOPTS -classpath "$CLASSPATH" com.cloudera.schemadict.SchemaSuggest "$@"
+elif [ "$CMD" = "dict" ] ; then
+  exec java $JOPTS $UOPTS -classpath "$CLASSPATH" com.cloudera.schemadict.SchemaDictionary "$@"
 elif [ "$CMD" = "class" ]; then
   # Just do a java class with the environment setup
   exec java $JOPTS $UOPTS -classpath "$CLASSPATH" "$@"

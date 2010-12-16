@@ -1,4 +1,4 @@
-package com.cloudera.learnavro;
+package com.cloudera.schemadict;
 
 import java.util.Random;
 

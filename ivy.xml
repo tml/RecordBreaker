@@ -21,7 +21,7 @@
        xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
     <info
         organisation="com.cloudera"
-        module="learnavro"
+        module="schemadict"
         status="integration">
 	</info>
     <dependencies>

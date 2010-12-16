@@ -1,5 +1,5 @@
 // (c) Copyright (2010) Cloudera, Inc.
-package com.cloudera.learnavro;
+package com.cloudera.schemadict;
 
 import java.io.File;
 import java.io.IOException;
