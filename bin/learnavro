@@ -1,0 +1,120 @@
+#!/usr/bin/env /bin/bash
+
+##
+# This script runs core schemadict commands.  It sets up the jar files, paths, etc.
+#
+#
+function usage {
+  echo "usage: schemadict command [args...]"
+  echo "Commands include: "
+  echo " suggest          Takes an avro file with anonymous fields and suggests good labels"
+  echo " dict             Administer the schema dictionary"
+  exit -1
+}
+
+CMDPATH=`dirname $0`
+# name of path
+CMDPATH=`dirname $CMDPATH`
+
+SCHEMADICT=$CMDPATH/bin/schemadict
+
+CMD="$1"
+if [ -z "$CMD" ]; then
+    usage
+fi
+
+cygwin=false
+pathsep=":"
+case "`uname`" in
+    CYGWIN*)
+        cygwin=true
+        pathsep=";"
+        ;;
+esac
+
+function append_jars_onto_classpath() {
+    local JARS
+    JARS=`find $1/*.jar 2> /dev/null || true`
+    for i in $JARS; do
+        if [ -n "$CLASSPATH" ]; then
+            CLASSPATH+=${pathsep}${i}
+        else
+            CLASSPATH=${i}
+        fi
+    done
+}
+
+# name of script
+BINPATH=`dirname $0`
+# name of path
+CMDPATH=`dirname $BINPATH`
+
+if [ -f "${BINPATH}/schemadict-env.sh" ]; then
+    source "$BINPATH/schemadict-env.sh"
+fi
+
+if [ -z "SCHEMADICT_HOME" ]; then
+    export SCHEMADICT_HOME="$CMDPATH"
+fi
+
+if [ "$cygwin" == false ] ; then
+  # unix and "unix-like" setup
+  # pick user override, or check for dev env, or check for install
+  # conf dir first in the class path in order to ensure we get flume log4j.properties
+  CLASSPATH=""
+
+  if [ -n "SCHEMADICT_CLASSPATH" ]; then
+      CLASSPATH+=":${SCHEMADICT_CLASSPATH}"
+  fi
+
+  JOPTS+="-Djava.library.path=$CMDPATH/build/test:$CMDPATH/build"
+
+  append_jars_onto_classpath "$CMDPATH/build/ivy/lib/schemadict/default"
+  append_jars_onto_classpath "$CMDPATH/build"
+
+  CLASSPATH+=":$JAVA_HOME/lib/tools.jar"
+  CLASSPATH+=":$CMDPATH/build/test"
+  CLASSPATH+=":$CMDPATH/build"
+
+  append_jars_onto_classpath "${CMDPATH/build}"
+  append_jars_onto_classpath "${CMDPATH/build/test}"
+  append_jars_onto_classpath "${SCHEMADICT_HOME}"
+else
+  # windows with cygwin
+  JOPTS+="-Djava.library.path=`cygpath -d $CMDPATH/lib` "
+
+  CLASSPATH="$JAVA_HOME/lib/tools.jar"
+
+  append_jars_onto_classpath "$CMDPATH/lib"
+  append_jars_onto_classpath "$CMDPATH/libtest"
+
+  if [ "$FLUME_DEVMODE" == true ] ; then
+    # allow Jetty to compile servlets in dev mode
+    append_jars_onto_classpath "$CMDPATH/libbuild"
+  fi
+
+fi
+
+export CLASSPATH
+
+shift
+
+if [ "$CMD" = "-h" ] ; then
+  usage
+elif [ "$CMD" = "suggest" ] ; then
+  exec java $JOPTS $UOPTS -classpath "$CLASSPATH" com.cloudera.schemadict.SchemaSuggest "$@"
+elif [ "$CMD" = "dict" ] ; then
+  exec java $JOPTS $UOPTS -classpath "$CLASSPATH" com.cloudera.schemadict.SchemaDictionary "$@"
+elif [ "$CMD" = "class" ]; then
+  # Just do a java class with the environment setup
+  exec java $JOPTS $UOPTS -classpath "$CLASSPATH" "$@"
+elif [ "$CMD" = "classpath" ];  then
+  echo $CLASSPATH
+  echo "--"
+  echo $JOPTS
+  echo "--"
+  echo $UOPTS
+else
+  usage
+fi
+
