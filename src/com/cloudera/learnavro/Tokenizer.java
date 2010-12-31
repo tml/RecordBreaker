@@ -21,10 +21,6 @@ public class Tokenizer {
   static List<Pattern> yearFirstPatterns = new ArrayList<Pattern>();
   static List<Pattern> dayFirstPatterns = new ArrayList<Pattern>();
 
-  /**
-  static Pattern datePattern1 = Pattern.compile("(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\s+([123]*\\d)\\s+(\\d{4})");
-  static Pattern datePattern2 = Pattern.compile("(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\s+([123]*\\d)");
-  **/
   static Pattern ipAddrPattern = Pattern.compile("((?:(?:\\d+\\.){3,}\\d+)|(?:\\*\\.(?:(?:\\d+|\\*)\\.)*(?:\\d+|\\*)))");
   static Pattern permissionBitPattern = Pattern.compile("([drwx-]{9,})");
   static Pattern timePattern1 = Pattern.compile("(\\d\\d):(\\d\\d):(\\d\\d)");
@@ -33,7 +29,7 @@ public class Tokenizer {
   static Pattern intRangePattern = Pattern.compile("(\\d+)-(\\d+)");
   static Pattern floatPattern = Pattern.compile("([+-]?\\d*\\.\\d+)");
   static Pattern floatRangePattern = Pattern.compile("(\\d*\\.\\d+)-(\\d*\\.\\d+)");
-  static Pattern stringPattern = Pattern.compile("(\\p{Alnum}{2,})");
+  static Pattern stringPattern = Pattern.compile("((?:[\\S&&[^\\,\\;\\|]]){2,})");
   static Pattern charPattern = Pattern.compile("(\\S)");
   static Pattern eolPattern = Pattern.compile("(\\n)");
   static Pattern wsPattern = Pattern.compile("(\\s+)");
@@ -193,22 +189,6 @@ public class Tokenizer {
       if (shouldContinue) {
         continue;
       }
-
-      /**
-      m = datePattern1.matcher(curS);
-      if (m.lookingAt()) {
-        System.err.println("Got " + m.group(1) + " on " + curS);
-        toksSoFar.add(new Token.DateToken(m.group(1), m.group(2), m.group(3)));
-        curS = cutChunk(m, curS);
-        continue;
-      }
-      m = datePattern2.matcher(curS);
-      if (m.lookingAt()) {
-        toksSoFar.add(new Token.DateToken(m.group(1), m.group(2)));
-        curS = cutChunk(m, curS);
-        continue;
-      }
-      **/
 
       // TIME
       m = timePattern1.matcher(curS);
