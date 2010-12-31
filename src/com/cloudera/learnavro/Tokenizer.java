@@ -18,7 +18,7 @@ public class Tokenizer {
   static Pattern intRangePattern = Pattern.compile("(\\d+)-(\\d+)");
   static Pattern floatPattern = Pattern.compile("([+-]?\\d*\\.\\d+)");
   static Pattern floatRangePattern = Pattern.compile("(\\d*\\.\\d+)-(\\d*\\.\\d+)");
-  static Pattern stringPattern = Pattern.compile("(\\S{2,})");
+  static Pattern stringPattern = Pattern.compile("(\\p{Alnum}{2,})");
   static Pattern charPattern = Pattern.compile("(\\S)");
   static Pattern eolPattern = Pattern.compile("(\\n)");
   static Pattern wsPattern = Pattern.compile("(\\s+)");
@@ -55,9 +55,9 @@ public class Tokenizer {
    * Accepts a single line of input, returns all the tokens for that line.
    * If the line cannot be parsed, we return null.
    */
-  static public List<Token> tokenize(String s) throws IOException {
+  static public List<Token.AbstractToken> tokenize(String s) throws IOException {
     String curS = s;
-    List<Token> toksSoFar = new ArrayList<Token>();
+    List<Token.AbstractToken> toksSoFar = new ArrayList<Token.AbstractToken>();
 
     // We now repeatedly pass through a series of text-extractor tests.
     //System.err.println("PARSE: " + s);
@@ -72,7 +72,7 @@ public class Tokenizer {
         String closeChar = complements.get("" + startChar);
         int closeIndex = curS.indexOf(closeChar, 1);
         if (closeIndex >= 0) {
-          toksSoFar.add(new MetaToken(new CharToken(curS.charAt(0)), new CharToken(closeChar.charAt(0)), tokenize(curS.substring(1, closeIndex))));
+          toksSoFar.add(new Token.MetaToken(new Token.CharToken(curS.charAt(0)), new Token.CharToken(closeChar.charAt(0)), tokenize(curS.substring(1, closeIndex))));
           curS = curS.substring(closeIndex+1);
           continue;
         }
@@ -81,7 +81,7 @@ public class Tokenizer {
       // 2.  IP ADDR
       Matcher m = ipAddrPattern.matcher(curS);
       if (m.lookingAt()) {
-        toksSoFar.add(new IPAddrToken(m.group(1)));
+        toksSoFar.add(new Token.IPAddrToken(m.group(1)));
         curS = cutChunk(m, curS);
         continue;
       }
@@ -89,13 +89,13 @@ public class Tokenizer {
       // 3.  TIME
       m = timePattern1.matcher(curS);
       if (m.lookingAt()) {
-        toksSoFar.add(new TimeToken(m.group(1), m.group(2), m.group(3)));
+        toksSoFar.add(new Token.TimeToken(m.group(1), m.group(2), m.group(3)));
         curS = cutChunk(m, curS);
         continue;
       }
       m = timePattern2.matcher(curS);
       if (m.lookingAt()) {
-        toksSoFar.add(new TimeToken(m.group(1), m.group(2), "00"));
+        toksSoFar.add(new Token.TimeToken(m.group(1), m.group(2), "00"));
         curS = cutChunk(m, curS);
         continue;
       }
@@ -103,9 +103,9 @@ public class Tokenizer {
       // 4. FLOAT RANGE
       m = floatRangePattern.matcher(curS);
       if (m.lookingAt()) {
-        toksSoFar.add(new FloatToken(m.group(1)));
-        toksSoFar.add(new CharToken('-'));
-        toksSoFar.add(new FloatToken(m.group(2)));
+        toksSoFar.add(new Token.FloatToken(m.group(1)));
+        toksSoFar.add(new Token.CharToken('-'));
+        toksSoFar.add(new Token.FloatToken(m.group(2)));
         curS = cutChunk(m, curS);
         continue;
       }
@@ -114,9 +114,9 @@ public class Tokenizer {
       // REMIND - mjc - Should there be a dedicated Token class for ranges?
       m = intRangePattern.matcher(curS);
       if (m.lookingAt()) {
-        toksSoFar.add(new IntToken(m.group(1)));
-        toksSoFar.add(new CharToken('-'));
-        toksSoFar.add(new IntToken(m.group(2)));
+        toksSoFar.add(new Token.IntToken(m.group(1)));
+        toksSoFar.add(new Token.CharToken('-'));
+        toksSoFar.add(new Token.IntToken(m.group(2)));
         curS = cutChunk(m, curS);
         continue;
       }
@@ -124,7 +124,7 @@ public class Tokenizer {
       // 6. FLOAT
       m = floatPattern.matcher(curS);
       if (m.lookingAt()) {
-        toksSoFar.add(new FloatToken(m.group(1)));
+        toksSoFar.add(new Token.FloatToken(m.group(1)));
         curS = cutChunk(m, curS);
         continue;
       }
@@ -132,7 +132,7 @@ public class Tokenizer {
       // 7. INTEGER
       m = intPattern.matcher(curS);
       if (m.lookingAt()) {
-        toksSoFar.add(new IntToken(m.group(1)));
+        toksSoFar.add(new Token.IntToken(m.group(1)));
         curS = cutChunk(m, curS);
         continue;
       }
@@ -140,7 +140,7 @@ public class Tokenizer {
       // 8. STRING
       m = stringPattern.matcher(curS);
       if (m.lookingAt()) {
-        toksSoFar.add(new StringToken(m.group(1)));
+        toksSoFar.add(new Token.StringToken(m.group(1)));
         curS = cutChunk(m, curS);
         continue;
       }
@@ -148,7 +148,7 @@ public class Tokenizer {
       // 9. CHAR
       m = charPattern.matcher(curS);
       if (m.lookingAt()) {
-        toksSoFar.add(new CharToken(m.group(1).charAt(0)));
+        toksSoFar.add(new Token.CharToken(m.group(1).charAt(0)));
         curS = cutChunk(m, curS);
         continue;
       }
@@ -156,7 +156,7 @@ public class Tokenizer {
       // EOL-Token
       m = eolPattern.matcher(curS);
       if (m.lookingAt()) {
-        toksSoFar.add(new EOLToken());
+        toksSoFar.add(new Token.EOLToken());
         curS = cutChunk(m, curS);
         continue;
       }
@@ -164,7 +164,7 @@ public class Tokenizer {
       // Whitespace
       m = wsPattern.matcher(curS);
       if (m.lookingAt()) {
-        toksSoFar.add(new WhitespaceToken());
+        toksSoFar.add(new Token.WhitespaceToken());
         curS = cutChunk(m, curS);
         continue;
       }
@@ -197,7 +197,7 @@ public class Tokenizer {
     List<Integer> unparseableLineNos = new ArrayList<Integer>();
     List<String> unparseableStrs = new ArrayList<String>();
     List<Integer> parseableLineNos = new ArrayList<Integer>();
-    List<List<Token>> allChunks = new ArrayList<List<Token>>();
+    List<List<Token.AbstractToken>> allChunks = new ArrayList<List<Token.AbstractToken>>();
 
     // Transform the text into a list of "chunks".  
     // A single chunk corresponds to a line of text.  A chunk is a list of Tokens.
@@ -209,7 +209,7 @@ public class Tokenizer {
       String s = in.readLine();
       int lineno = 0;
       while (s != null) {
-        List<Token> chunkToks = Tokenizer.tokenize(s);
+        List<Token.AbstractToken> chunkToks = Tokenizer.tokenize(s);
         if (chunkToks != null) {
           allChunks.add(chunkToks);
           parseableLineNos.add(lineno);
@@ -239,9 +239,9 @@ public class Tokenizer {
       System.err.println();
       System.err.println("--RESULTS--------");
       int i = 0;
-      for (List<Token> chunk: allChunks) {
+      for (List<Token.AbstractToken> chunk: allChunks) {
         System.err.print(parseableLineNos.get(i) + ".  ");
-        for (Token tok: chunk) {
+        for (Token.AbstractToken tok: chunk) {
           System.err.print(tok + "  ");
         }
         System.err.println();

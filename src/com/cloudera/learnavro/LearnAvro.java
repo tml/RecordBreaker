@@ -22,16 +22,17 @@ public class LearnAvro {
     List<Integer> unparseableLineNos = new ArrayList<Integer>();
     List<String> unparseableStrs = new ArrayList<String>();
     List<Integer> parseableLineNos = new ArrayList<Integer>();
-    List<List<Token>> allChunks = new ArrayList<List<Token>>();
+    List<List<Token.AbstractToken>> allChunks = new ArrayList<List<Token.AbstractToken>>();
 
-    // Transform the text into a list of "chunks".  
-    // A single chunk corresponds to a line of text.  A chunk is a list of Tokens.
+    //
+    // Transform the text into a list of "chunks".  A single chunk corresponds to a line of text.  A chunk is a list of Tokens.
+    //
     BufferedReader in = new BufferedReader(new FileReader(f));
     try {
       String s = in.readLine();
       int lineno = 0;
       while (s != null) {
-        List<Token> chunkToks = Tokenizer.tokenize(s);
+        List<Token.AbstractToken> chunkToks = Tokenizer.tokenize(s);
         if (chunkToks != null) {
           allChunks.add(chunkToks);
           parseableLineNos.add(lineno);
@@ -45,6 +46,11 @@ public class LearnAvro {
     } finally {
       in.close();
     }
+
+    //
+    // Infer type structure from the tokenized chunks
+    //
+    InferredType typeTree = TypeInference.infer(allChunks);
 
     // Extract the formats that characterize this set of 
     //format.assignNames();
