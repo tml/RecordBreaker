@@ -27,6 +27,7 @@ public class LearnAvro {
     //
     // Transform the text into a list of "chunks".  A single chunk corresponds to a line of text.  A chunk is a list of Tokens.
     //
+    long startRead = System.currentTimeMillis();
     BufferedReader in = new BufferedReader(new FileReader(f));
     try {
       String s = in.readLine();
@@ -50,7 +51,16 @@ public class LearnAvro {
     //
     // Infer type structure from the tokenized chunks
     //
+    long start = System.currentTimeMillis();
     InferredType typeTree = TypeInference.infer(allChunks);
+    long end = System.currentTimeMillis();
+    double loadTime = (start - startRead) / 1000.0;
+    double inferTime = (end - start) / 1000.0;
+    double totalTime = (end - startRead) / 1000.0;
+    System.err.println("Total elapsed time: " + totalTime);
+    System.err.println("Elapsed load time: " + loadTime);
+    System.err.println("Elapsed inference time: " + inferTime);
+    System.err.println("Ratio load-to-inference: " + (loadTime / inferTime));
 
     // Extract the formats that characterize this set of 
     //format.assignNames();

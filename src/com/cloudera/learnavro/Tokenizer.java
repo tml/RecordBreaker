@@ -11,7 +11,14 @@ import java.util.regex.*;
  *
  *********************************************************/
 public class Tokenizer {
-  static Pattern ipAddrPattern = Pattern.compile("(\\d+\\.\\d+\\.\\d+\\.\\d+(?:\\.\\d+)?)");
+  //static Pattern ipAddrPattern = Pattern.compile("((?:[\\d\\*]\\.)+[\\d\\*])");
+  //static Pattern ipAddrPattern = Pattern.compile("((?:[\\d+\\*]\\.)+[\\d+\\*])");
+  static Pattern ipAddrPattern = Pattern.compile("((?:(?:\\d+\\.){3,}\\d+)|(?:\\*\\.(?:(?:\\d+|\\*)\\.)*(?:\\d+|\\*)))");
+
+  // starts with number: indicates at least 4 elts
+  // starts with asterisk: at least 2 elts.
+
+  static Pattern permissionBitPattern = Pattern.compile("([drwx-]{9,})");
   static Pattern timePattern1 = Pattern.compile("(\\d\\d):(\\d\\d):(\\d\\d)");
   static Pattern timePattern2 = Pattern.compile("(\\d\\d):(\\d\\d)");
   static Pattern intPattern = Pattern.compile("([-+]?\\d+)");
@@ -65,7 +72,7 @@ public class Tokenizer {
       //System.err.println("CurS: '" + curS + "', tokSetSize: " + toksSoFar.size());
       int newStart = -1;
 
-      // 1.  META
+      // META
       char startChar = curS.charAt(0);
       if (complements.get("" + startChar) != null) {
         //System.err.println("START CHAR: " + startChar);
@@ -78,7 +85,7 @@ public class Tokenizer {
         }
       }
 
-      // 2.  IP ADDR
+      // IP ADDR
       Matcher m = ipAddrPattern.matcher(curS);
       if (m.lookingAt()) {
         toksSoFar.add(new Token.IPAddrToken(m.group(1)));
@@ -86,7 +93,15 @@ public class Tokenizer {
         continue;
       }
 
-      // 3.  TIME
+      // PERMISSION BITS
+      m = permissionBitPattern.matcher(curS);
+      if (m.lookingAt()) {
+        toksSoFar.add(new Token.PermissionBits(m.group(1)));
+        curS = cutChunk(m, curS);
+        continue;
+      }
+
+      // TIME
       m = timePattern1.matcher(curS);
       if (m.lookingAt()) {
         toksSoFar.add(new Token.TimeToken(m.group(1), m.group(2), m.group(3)));
@@ -100,7 +115,7 @@ public class Tokenizer {
         continue;
       }
 
-      // 4. FLOAT RANGE
+      // FLOAT RANGE
       m = floatRangePattern.matcher(curS);
       if (m.lookingAt()) {
         toksSoFar.add(new Token.FloatToken(m.group(1)));
@@ -110,7 +125,7 @@ public class Tokenizer {
         continue;
       }
 
-      // 5. INTEGER RANGE
+      // INTEGER RANGE
       // REMIND - mjc - Should there be a dedicated Token class for ranges?
       m = intRangePattern.matcher(curS);
       if (m.lookingAt()) {
@@ -121,7 +136,7 @@ public class Tokenizer {
         continue;
       }
 
-      // 6. FLOAT
+      // FLOAT
       m = floatPattern.matcher(curS);
       if (m.lookingAt()) {
         toksSoFar.add(new Token.FloatToken(m.group(1)));
@@ -129,7 +144,7 @@ public class Tokenizer {
         continue;
       }
 
-      // 7. INTEGER
+      // INTEGER
       m = intPattern.matcher(curS);
       if (m.lookingAt()) {
         toksSoFar.add(new Token.IntToken(m.group(1)));
@@ -137,7 +152,7 @@ public class Tokenizer {
         continue;
       }
 
-      // 8. STRING
+      // STRING
       m = stringPattern.matcher(curS);
       if (m.lookingAt()) {
         toksSoFar.add(new Token.StringToken(m.group(1)));
@@ -145,7 +160,7 @@ public class Tokenizer {
         continue;
       }
 
-      // 9. CHAR
+      // CHAR
       m = charPattern.matcher(curS);
       if (m.lookingAt()) {
         toksSoFar.add(new Token.CharToken(m.group(1).charAt(0)));
