@@ -11,13 +11,21 @@ import java.util.regex.*;
  *
  *********************************************************/
 public class Tokenizer {
-  //static Pattern ipAddrPattern = Pattern.compile("((?:[\\d\\*]\\.)+[\\d\\*])");
-  //static Pattern ipAddrPattern = Pattern.compile("((?:[\\d+\\*]\\.)+[\\d+\\*])");
+  // The components of possible date patterns
+  static String monthPatternStrs[] = {"(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)", "([01]*\\d)"};
+  static String dateSeparatorPatternStrs[] = {"(?:\\s+)", "(?:\\.)", "(?:\\/)"};
+  static String dateDayPatternStr = "([0123]?\\d)";
+  static String dateYearPatternStr = "([12]\\d{3})";
+
+  static List<Pattern> monthFirstPatterns = new ArrayList<Pattern>();
+  static List<Pattern> yearFirstPatterns = new ArrayList<Pattern>();
+  static List<Pattern> dayFirstPatterns = new ArrayList<Pattern>();
+
+  /**
+  static Pattern datePattern1 = Pattern.compile("(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\s+([123]*\\d)\\s+(\\d{4})");
+  static Pattern datePattern2 = Pattern.compile("(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\s+([123]*\\d)");
+  **/
   static Pattern ipAddrPattern = Pattern.compile("((?:(?:\\d+\\.){3,}\\d+)|(?:\\*\\.(?:(?:\\d+|\\*)\\.)*(?:\\d+|\\*)))");
-
-  // starts with number: indicates at least 4 elts
-  // starts with asterisk: at least 2 elts.
-
   static Pattern permissionBitPattern = Pattern.compile("([drwx-]{9,})");
   static Pattern timePattern1 = Pattern.compile("(\\d\\d):(\\d\\d):(\\d\\d)");
   static Pattern timePattern2 = Pattern.compile("(\\d\\d):(\\d\\d)");
@@ -47,6 +55,20 @@ public class Tokenizer {
     reverseComplements.put("'", "'");
     reverseComplements.put(">", "<");
     reverseComplements.put(")", "(");
+
+    // Construct the date patterns
+    for (String separatorPatternStr: dateSeparatorPatternStrs) {
+      for (String monthPatternStr: monthPatternStrs) {
+        // Create all legal combos of month, day, year, and separator
+        monthFirstPatterns.add(Pattern.compile(monthPatternStr + separatorPatternStr + dateDayPatternStr + separatorPatternStr + dateYearPatternStr));
+        yearFirstPatterns.add(Pattern.compile(dateYearPatternStr + separatorPatternStr + monthPatternStr + separatorPatternStr + dateDayPatternStr));
+        dayFirstPatterns.add(Pattern.compile(dateDayPatternStr + separatorPatternStr + monthPatternStr + separatorPatternStr + dateYearPatternStr));
+      }
+    }
+    for (String separatorPatternStr: dateSeparatorPatternStrs) {
+      monthFirstPatterns.add(Pattern.compile(monthPatternStrs[0] + separatorPatternStr + dateDayPatternStr));
+      dayFirstPatterns.add(Pattern.compile(dateDayPatternStr + separatorPatternStr + monthPatternStrs[0]));
+    }
   }
 
   private static String cutChunk(Matcher m, String curS) {
@@ -100,6 +122,93 @@ public class Tokenizer {
         curS = cutChunk(m, curS);
         continue;
       }
+
+      // DATE
+      // Because of the huge number of possible date patterns, and our desire to not perform multi-token parsing,
+      // the date-processing here is a bit of a mess.
+      boolean shouldContinue = false;
+      for (Pattern p: monthFirstPatterns) {
+        m = p.matcher(curS);
+        if (m.lookingAt()) {
+          if (m.groupCount() == 2) {
+            try {
+              toksSoFar.add(new Token.DateToken(m.group(2), m.group(1)));
+            } catch (IOException iex) {
+              continue;
+            }
+          } else {
+            try {
+              toksSoFar.add(new Token.DateToken(m.group(2), m.group(1), m.group(3)));
+            } catch (IOException iex) {
+              continue;
+            }
+          }
+          curS = cutChunk(m, curS);
+          shouldContinue = true;
+          break;
+        }
+      }
+      if (shouldContinue) {
+        continue;
+      }
+
+      for (Pattern p: yearFirstPatterns) {
+        m = p.matcher(curS);
+        if (m.lookingAt()) {
+          try {
+            toksSoFar.add(new Token.DateToken(m.group(3), m.group(2), m.group(1)));
+          } catch (IOException iex) {
+            continue;
+          }
+          curS = cutChunk(m, curS);
+          shouldContinue = true;
+          break;
+        }
+      }
+      if (shouldContinue) {
+        continue;
+      }
+
+      for (Pattern p: dayFirstPatterns) {
+        m = p.matcher(curS);
+        if (m.lookingAt()) {
+          if (m.groupCount() == 2) {
+            try {
+              toksSoFar.add(new Token.DateToken(m.group(1), m.group(2)));
+            } catch (IOException iex) {
+              continue;
+            }
+          } else {
+            try {
+              toksSoFar.add(new Token.DateToken(m.group(1), m.group(2), m.group(3)));
+            } catch (IOException iex) {
+              continue;
+            }
+          }
+          curS = cutChunk(m, curS);
+          shouldContinue = true;
+          break;
+        }
+      }
+      if (shouldContinue) {
+        continue;
+      }
+
+      /**
+      m = datePattern1.matcher(curS);
+      if (m.lookingAt()) {
+        System.err.println("Got " + m.group(1) + " on " + curS);
+        toksSoFar.add(new Token.DateToken(m.group(1), m.group(2), m.group(3)));
+        curS = cutChunk(m, curS);
+        continue;
+      }
+      m = datePattern2.matcher(curS);
+      if (m.lookingAt()) {
+        toksSoFar.add(new Token.DateToken(m.group(1), m.group(2)));
+        curS = cutChunk(m, curS);
+        continue;
+      }
+      **/
 
       // TIME
       m = timePattern1.matcher(curS);

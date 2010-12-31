@@ -1,6 +1,7 @@
 // (c) Copyright (2010) Cloudera, Inc.
 package com.cloudera.learnavro;
 
+import java.io.*;
 import java.util.*;
 
 /*********************************************************
@@ -10,6 +11,8 @@ import java.util.*;
  * This file contains the superclass Token as well as the many subclasses.
  *********************************************************/
 public class Token {
+  static int EPOCH_START_YEAR = 1970;
+
   static class AbstractToken {
     public String getId() {
       return null;
@@ -93,6 +96,49 @@ public class Token {
     }
   }
 
+  static class DateToken extends AbstractToken {
+    String month;
+    int day;
+    int year;
+    public DateToken(String dayStr, String monthStr) throws IOException {
+      try {
+        this.day = Integer.parseInt(dayStr);
+        if (day < 1 || day > 31) {
+          throw new IOException("Illegal day value: " + day);
+        }
+      } catch (NumberFormatException nfe) {
+        nfe.printStackTrace();
+      }
+      this.month = monthStr;
+      this.year = -1;
+    }
+    public DateToken(String dayStr, String monthStr, String yrStr) throws IOException {
+      try {
+        this.day = Integer.parseInt(dayStr);
+        if (day < 1 || day > 31) {
+          throw new IOException("Illegal day value: " + day);
+        }
+      } catch (NumberFormatException nfe) {
+        nfe.printStackTrace();
+      }
+      this.month = monthStr;
+      try {
+        this.year = Integer.parseInt(yrStr);
+        if (year < EPOCH_START_YEAR) {
+          throw new IOException("Illegal year value: " + year);
+        }
+      } catch (NumberFormatException nfe) {
+        nfe.printStackTrace();
+      }
+    }
+    public String toString() {
+      return "DATE(" + day + ", " + month + ", " + year + ")";
+    }
+    public String getId() {
+      return "date";
+    }
+  }
+
   static class TimeToken extends AbstractToken {
     int hr;
     int min;
@@ -103,6 +149,7 @@ public class Token {
         this.min = Integer.parseInt(minS);
         this.sec = Integer.parseInt(secS);
       } catch (NumberFormatException nfe) {
+        nfe.printStackTrace();
       }
     }
     public String toString() {
