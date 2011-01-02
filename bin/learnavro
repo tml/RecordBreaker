@@ -5,10 +5,9 @@
 #
 #
 function usage {
-  echo "usage: schemadict command [args...]"
+  echo "usage: learnavro command [args...]"
   echo "Commands include: "
-  echo " suggest          Takes an avro file with anonymous fields and suggests good labels"
-  echo " dict             Administer the schema dictionary"
+  echo " <none<             None yet."
   exit -1
 }
 
@@ -101,10 +100,6 @@ shift
 
 if [ "$CMD" = "-h" ] ; then
   usage
-elif [ "$CMD" = "suggest" ] ; then
-  exec java $JOPTS $UOPTS -classpath "$CLASSPATH" com.cloudera.schemadict.SchemaSuggest "$@"
-elif [ "$CMD" = "dict" ] ; then
-  exec java $JOPTS $UOPTS -classpath "$CLASSPATH" com.cloudera.schemadict.SchemaDictionary "$@"
 elif [ "$CMD" = "class" ]; then
   # Just do a java class with the environment setup
   exec java $JOPTS $UOPTS -classpath "$CLASSPATH" "$@"
