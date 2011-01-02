@@ -64,7 +64,7 @@ public class LearnAvro {
 
     //
     // The existing type tree is now correct, but could probably be more succinct.
-    // We now improve/rewrite it.
+    // We can now improve/rewrite it.
     //
     return null;
   }
