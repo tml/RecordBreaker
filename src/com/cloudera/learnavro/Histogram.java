@@ -12,6 +12,8 @@ public class Histogram {
   // static members
   ///////////////////////////////////////////////////
   static double CLUSTER_TOLERANCE = 0.01;
+  static double MAX_RESIDUAL_MASS = 0.1;
+  static double MIN_COVERAGE_FACTOR = 0.2;
 
   ///////////////////////////////////////////////////
   // static classes
@@ -262,6 +264,25 @@ public class Histogram {
     this.width = width;
     this.residualMass = residualMass;
     this.coverage = coverage;
+  }
+
+  public boolean passStructStatisticalTest(int numChunks) {
+    return residualMass < MAX_RESIDUAL_MASS && coverage > MIN_COVERAGE_FACTOR * numChunks;
+  }
+  public boolean passArrayStatisticalTest(int numChunks) {
+    return width > 3 && coverage > MIN_COVERAGE_FACTOR * numChunks;
+  }
+  public String getHistogramType() {
+    return histogramType;
+  }
+  public double getWidth() {
+    return width;
+  }
+  public double getResidualMass() {
+    return residualMass;
+  }
+  public double getCoverage() {
+    return coverage;
   }
 
   public String toString() {

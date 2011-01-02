@@ -20,6 +20,7 @@ public class Token {
   }
 
   static class MetaToken extends AbstractToken {
+    public static String tokenTypeLabel = "meta";
     CharToken start;
     CharToken end;
     List<AbstractToken> contents;
@@ -55,6 +56,7 @@ public class Token {
   }
 
   static class CharToken extends AbstractToken {
+    public static String tokenTypeLabel = "char";
     char c;
     public CharToken(char c) {
       this.c = c;
@@ -71,6 +73,7 @@ public class Token {
   }
 
   static class IPAddrToken extends AbstractToken {
+    public static String tokenTypeLabel = "ipaddr";
     String s;
     public IPAddrToken(String s) {
       this.s = s;
@@ -84,6 +87,7 @@ public class Token {
   }
 
   static class PermissionBits extends AbstractToken {
+    public static String tokenTypeLabel = "permissionbits";
     String s;
     public PermissionBits(String s) {
       this.s = s;
@@ -97,6 +101,7 @@ public class Token {
   }
 
   static class DateToken extends AbstractToken {
+    public static String tokenTypeLabel = "date";
     String month;
     int day;
     int year;
@@ -140,6 +145,7 @@ public class Token {
   }
 
   static class TimeToken extends AbstractToken {
+    public static String tokenTypeLabel = "time";
     int hr;
     int min;
     int sec;
@@ -161,6 +167,7 @@ public class Token {
   }
 
   static class IntToken extends AbstractToken {
+    public static String tokenTypeLabel = "int";
     int i;
     public IntToken(String s) {
       try {
@@ -178,6 +185,7 @@ public class Token {
   }
 
   static class FloatToken extends AbstractToken {
+    public static String tokenTypeLabel = "float";
     double f;
     public FloatToken(String s) {
       try {
@@ -195,6 +203,7 @@ public class Token {
   }
 
   static class StringToken extends AbstractToken {
+    public static String tokenTypeLabel = "string";
     String s;
     public StringToken(String s) {
       this.s = s;
@@ -208,6 +217,7 @@ public class Token {
   }
 
   static class EOLToken extends AbstractToken {
+    public static String tokenTypeLabel = "eol";
     public EOLToken() {
     }
     public String toString() {
@@ -219,6 +229,7 @@ public class Token {
   }
 
   static class WhitespaceToken extends AbstractToken {
+    public static String tokenTypeLabel = "ws";
     public WhitespaceToken() {
     }
     public String toString() {
@@ -230,6 +241,7 @@ public class Token {
   }
 
   static class NoopToken extends AbstractToken {
+    public static String tokenTypeLabel = "noop";
     public NoopToken() {
     }
     public String toString() {

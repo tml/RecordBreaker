@@ -62,8 +62,10 @@ public class LearnAvro {
     System.err.println("Elapsed inference time: " + inferTime);
     System.err.println("Ratio load-to-inference: " + (loadTime / inferTime));
 
-    // Extract the formats that characterize this set of 
-    //format.assignNames();
+    //
+    // The existing type tree is now correct, but could probably be more succinct.
+    // We now improve/rewrite it.
+    //
     return null;
   }
 
