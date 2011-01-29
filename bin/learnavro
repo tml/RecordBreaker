@@ -7,7 +7,7 @@
 function usage {
   echo "usage: learnavro command [args...]"
   echo "Commands include: "
-  echo " <none<             None yet."
+  echo " <learn>             Learn the schema for a given datafile"
   exit -1
 }
 
@@ -100,6 +100,8 @@ shift
 
 if [ "$CMD" = "-h" ] ; then
   usage
+elif [ "$CMD" = "learn" ] ; then
+  exec java $JOPTS $UOPTS -classpath "$CLASSPATH" com.cloudera.learnavro.LearnAvro "$@"
 elif [ "$CMD" = "class" ]; then
   # Just do a java class with the environment setup
   exec java $JOPTS $UOPTS -classpath "$CLASSPATH" "$@"

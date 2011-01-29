@@ -18,11 +18,20 @@ public class TypeInference {
 
   static class BaseProphecy extends TypeProphecy {
     Class baseType;
-    public BaseProphecy(Class baseType) {
+    String baseSuffix;
+    public BaseProphecy(Class baseType, Token.AbstractToken baseExemplar) {
       this.baseType = baseType;
+      if (baseExemplar instanceof Token.CharToken) {
+        baseSuffix = "" + ((Token.CharToken) baseExemplar).getChar();
+      } else {
+        baseSuffix = "";
+      }
     }
     Class getBaseType() {
       return baseType;
+    }
+    String getBaseSuffix() {
+      return baseSuffix;
     }
   }
 
@@ -80,6 +89,7 @@ public class TypeInference {
    */
   public static InferredType infer(List<List<Token.AbstractToken>> chunks) {
     InferredType typeTree = discover(chunks);
+    typeTree = typeTree.hoistUnions();
     //typeTree.ensureParsability();
     return typeTree;
   }
@@ -111,7 +121,7 @@ public class TypeInference {
     //
     if (numToks == 0 && noops == chunks.size()) {
       //System.err.println("BASE-1");
-      return new BaseProphecy(Token.NoopToken.class);
+      return new BaseProphecy(Token.NoopToken.class, null);
     }
     //
     // CONDITION: Does the chunkset consist of a single column of one type of token?
@@ -122,7 +132,7 @@ public class TypeInference {
       if (! (prizeToken instanceof Token.MetaToken)) {
         //System.err.println("BASE-2");
         // If it's not a MetaToken, then it's easy: we prophesy a data column consisting of a single basic type
-        return new BaseProphecy(prizeToken.getClass());
+        return new BaseProphecy(prizeToken.getClass(), prizeToken);
       } else {
         //System.err.println("STRUCT-1");
         //
@@ -534,7 +544,8 @@ public class TypeInference {
     //
     TypeProphecy typePrediction = oracle(chunks);
     if (typePrediction instanceof BaseProphecy) {
-      return new BaseType(((BaseProphecy) typePrediction).getBaseType());
+      BaseProphecy bp = (BaseProphecy) typePrediction;
+      return new BaseType(bp.getBaseType(), bp.getBaseSuffix());
 
     } else if (typePrediction instanceof StructProphecy) {
       StructProphecy sp = (StructProphecy) typePrediction;
@@ -638,5 +649,12 @@ public class TypeInference {
     System.err.println();
     System.err.println("-- Inferred Type Structure -----------------");
     System.err.println(typeTree.toString());
+
+
+    //
+    // What do we want back from the parsed structure?
+    // 1) A JSON record for the actual data.
+    // 2) Maybe some record of which union branches were parsed?
+    //
   }
 }

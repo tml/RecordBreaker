@@ -29,7 +29,7 @@ public class Tokenizer {
   static Pattern intRangePattern = Pattern.compile("(\\d+)-(\\d+)");
   static Pattern floatPattern = Pattern.compile("([+-]?\\d*\\.\\d+)");
   static Pattern floatRangePattern = Pattern.compile("(\\d*\\.\\d+)-(\\d*\\.\\d+)");
-  static Pattern stringPattern = Pattern.compile("((?:[\\S&&[^\\,\\;\\|]]){2,})");
+  static Pattern stringPattern = Pattern.compile("((?:[\\S&&[^\\,\\;\\|\\[\\]\\{\\}\\<\\>\\(\\)\\']]){2,})");
   static Pattern charPattern = Pattern.compile("(\\S)");
   static Pattern eolPattern = Pattern.compile("(\\n)");
   static Pattern wsPattern = Pattern.compile("(\\s+)");
