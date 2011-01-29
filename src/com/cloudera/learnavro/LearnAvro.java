@@ -88,6 +88,7 @@ public class LearnAvro {
     //
     if (emitAvro) {
       Schema schema = typeTree.getAvroSchema();
+      System.err.println("Obtained schema.");
       GenericDatumWriter gdWriter = new GenericDatumWriter(schema);
       BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(dataFile));
       JsonEncoder encoder = new JsonEncoder(schema, out);
@@ -97,7 +98,9 @@ public class LearnAvro {
           String s = in.readLine();
           int lineno = 0;
           while (s != null) {
+            System.err.print("Parsing: " + s + "...");
             GenericContainer gct = typeTree.parse(s);
+            System.err.println("done!");
             gdWriter.write(gct, encoder);
             System.err.println("Data for line " + lineno + ": " + gct);
             s = in.readLine();

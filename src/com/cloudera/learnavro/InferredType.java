@@ -21,6 +21,9 @@ public abstract class InferredType implements Writable {
   static byte ARRAY_TYPE = 3;
   static byte UNION_TYPE = 4;
   static double CARD_COST = Math.log(24);
+
+  static int BASE_NOOP = 1;
+
   String name;
 
   /**
@@ -116,59 +119,28 @@ public abstract class InferredType implements Writable {
  * A BaseType represents a bottom-level parsable object: string, int, ipaddr, date, etc.
  ***************************************/
 class BaseType extends InferredType {
-  Class baseTokenClass;
-  String baseSuffix;
-  String baseTokenIdentifier;
-  
-  Schema avroSchema;
-  boolean hasData;
-  static int fieldCounter = 0;
+  int tokenClassIdentifier;
+  String tokenParameter;
 
+  static int fieldCounter = 0;
   public BaseType() {
   }
-  public BaseType(Class baseTokenClass, String baseSuffix) {
-    this.baseTokenClass = baseTokenClass;
-    this.baseSuffix = baseSuffix;
-    init();
-  }
-  void init() {
-    try {
-      baseTokenIdentifier = (String) baseTokenClass.getField("tokenTypeLabel").get(null) + baseSuffix;
-    } catch (NoSuchFieldException nsfe) {
-      baseTokenIdentifier = baseTokenClass.toString() + baseSuffix;
-      nsfe.printStackTrace();
-    } catch (IllegalAccessException iae) {
-      baseTokenIdentifier = baseTokenClass.toString() + baseSuffix;
-      iae.printStackTrace();
-    }
-    try {
-      hasData = ((Boolean) baseTokenClass.getField("hasData").get(null)).booleanValue();
-    } catch (NoSuchFieldException nsfe) {
-      baseTokenIdentifier = baseTokenClass.toString() + baseSuffix;
-      nsfe.printStackTrace();
-    } catch (IllegalAccessException iae) {
-      baseTokenIdentifier = baseTokenClass.toString() + baseSuffix;
-      iae.printStackTrace();
-    }
-    try {
-      avroSchema = (Schema) baseTokenClass.getMethod("createAvroSchema", null).invoke(null, null);
-    } catch (NoSuchMethodException nsme) {
-      nsme.printStackTrace();
-    } catch (InvocationTargetException ite) {
-      ite.printStackTrace();
-    } catch (IllegalAccessException iae) {
-      iae.printStackTrace();
-    }
+  public BaseType(Token.AbstractToken token) {
+    this.tokenClassIdentifier = token.getClassId();
+    this.tokenParameter = token.getParameter();
   }
   public InferredType hoistUnions() {
     return this;
   }
   public Schema getAvroSchema() {
-    return avroSchema;
+    return Token.AbstractToken.createAvroSchema(tokenClassIdentifier, tokenParameter);
   }
   ParseResult internalParse(String s) {
+    System.err.println("BASE PARSE FOR " + toString());
+
+    /**
     Matcher m = Tokenizer.intPattern.matcher(s);
-    if (hasData && m.lookingAt()) {
+    if (Token.AbstractToken.hasData(tokenClassIdentifier) && m.lookingAt()) {
       int lastGroupChar = m.end(m.groupCount());
       String newS = "";
       if (s.length() > lastGroupChar) {
@@ -185,9 +157,11 @@ class BaseType extends InferredType {
       s = s.substring(1);
       return new ParseResult(null, false, s);
     }
+    **/
+    return null;
   }
   public String toString() {
-    return "Base: " + baseTokenIdentifier + " ";
+    return "Base: " + Token.AbstractToken.getStrDesc(tokenClassIdentifier, tokenParameter) + " ";
   }
   public double getDescriptionCost() {
     return CARD_COST;
@@ -196,18 +170,20 @@ class BaseType extends InferredType {
     return "base-" + fieldCounter++;
   }
   public void readFields(DataInput in) throws IOException {
-    String cname = UTF8.readString(in);
-    try {
-      this.baseTokenClass = Class.forName(cname);
-    } catch (ClassNotFoundException cnfe) {
-      throw new IOException("Could not init deserialized classname: " + cname);
+    // instance-specific
+    this.tokenClassIdentifier = in.readInt();
+    if (in.readBoolean()) {
+      this.tokenParameter = UTF8.readString(in);
+    } else {
+      this.tokenParameter = null;
     }
-    this.baseSuffix = UTF8.readString(in);
-    init();
   }
   public void write(DataOutput out) throws IOException {
-    UTF8.writeString(out, baseTokenClass.getName());
-    UTF8.writeString(out, baseSuffix);
+    out.writeInt(tokenClassIdentifier);
+    out.writeBoolean(tokenParameter != null);
+    if (tokenParameter != null) {
+      UTF8.writeString(out, tokenParameter);
+    }
   }
   //public InferredType refine(RefinementRule rules[]) {
   //InferredType candidates[] = new InferredType[rules.length];

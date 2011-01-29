@@ -17,21 +17,12 @@ public class TypeInference {
   }
 
   static class BaseProphecy extends TypeProphecy {
-    Class baseType;
-    String baseSuffix;
-    public BaseProphecy(Class baseType, Token.AbstractToken baseExemplar) {
-      this.baseType = baseType;
-      if (baseExemplar instanceof Token.CharToken) {
-        baseSuffix = "" + ((Token.CharToken) baseExemplar).getChar();
-      } else {
-        baseSuffix = "";
-      }
+    Token.AbstractToken token;
+    public BaseProphecy(Token.AbstractToken token) {
+      this.token = token;
     }
-    Class getBaseType() {
-      return baseType;
-    }
-    String getBaseSuffix() {
-      return baseSuffix;
+    public Token.AbstractToken getToken() {
+      return token;
     }
   }
 
@@ -121,7 +112,7 @@ public class TypeInference {
     //
     if (numToks == 0 && noops == chunks.size()) {
       //System.err.println("BASE-1");
-      return new BaseProphecy(Token.NoopToken.class, null);
+      return new BaseProphecy(new Token.NoopToken());
     }
     //
     // CONDITION: Does the chunkset consist of a single column of one type of token?
@@ -132,7 +123,7 @@ public class TypeInference {
       if (! (prizeToken instanceof Token.MetaToken)) {
         //System.err.println("BASE-2");
         // If it's not a MetaToken, then it's easy: we prophesy a data column consisting of a single basic type
-        return new BaseProphecy(prizeToken.getClass(), prizeToken);
+        return new BaseProphecy(prizeToken);
       } else {
         //System.err.println("STRUCT-1");
         //
@@ -545,7 +536,7 @@ public class TypeInference {
     TypeProphecy typePrediction = oracle(chunks);
     if (typePrediction instanceof BaseProphecy) {
       BaseProphecy bp = (BaseProphecy) typePrediction;
-      return new BaseType(bp.getBaseType(), bp.getBaseSuffix());
+      return new BaseType(bp.getToken());
 
     } else if (typePrediction instanceof StructProphecy) {
       StructProphecy sp = (StructProphecy) typePrediction;
