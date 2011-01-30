@@ -136,8 +136,18 @@ class BaseType extends InferredType {
     return Token.AbstractToken.createAvroSchema(tokenClassIdentifier, tokenParameter);
   }
   ParseResult internalParse(String s) {
+    /**
     System.err.println("BASE PARSE FOR " + toString());
-
+    List<Token.AbstractToken> outputToks = new ArrayList<Token.AbstractToken>();
+    String newStr = Tokenizer.attemptParse(tokenClassIdentifier, tokenParameter, outputToks);
+    if (newStr == null) {
+      return null;
+    }
+    **/
+    //
+    // REMIND - how do I get ParseResult to be parameterized with the correct GenericData subclass?
+    //
+    //return new ParseResult(, Token.AbstractToken.hasData(tokenClassIdentifier), newStr);
     /**
     Matcher m = Tokenizer.intPattern.matcher(s);
     if (Token.AbstractToken.hasData(tokenClassIdentifier) && m.lookingAt()) {
