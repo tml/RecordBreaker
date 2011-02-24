@@ -81,14 +81,59 @@ public abstract class InferredType implements Writable {
     }
   }
   public GenericContainer parse(String str) {
-    ParseResult pr = internalParse(str);
-    if (pr.hasData() && pr.getRemainingString().length() == 0) {
+    //
+    // Try the naive parse
+    //
+    ParseResult pr = internalParse(str, null, true);
+    if (pr != null && pr.hasData()) {
       return (GenericContainer) pr.getData();
-    } else {
-      return null;
     }
+
+    //
+    // Otherwise, we need to consider other union-options.
+    // Unfold the candidate decisions into a series of target decisions
+    //
+    Map<String, Set<Integer>> candidateUnionDecisions = findCandidateUnionDecisions();
+
+    List<HashMap<String, Integer>> allUnionDecisions = new ArrayList<HashMap<String, Integer>>();
+    for (Map.Entry<String, Set<Integer>> pair: candidateUnionDecisions.entrySet()) {
+      String k = pair.getKey();
+      Set<Integer> indices = pair.getValue();
+
+      if (allUnionDecisions.size() == 0) {
+        for (Integer index: indices) {
+          HashMap<String, Integer> newMap = new HashMap<String, Integer>();
+          newMap.put(k, index);
+          allUnionDecisions.add(newMap);
+        }
+      } else {
+        List<HashMap<String, Integer>> newUnionDecisions = new ArrayList<HashMap<String, Integer>>();
+        for (HashMap<String, Integer> curUnionDecisions: allUnionDecisions) {
+          for (Integer index: indices) {
+            HashMap<String, Integer> newMap = (HashMap<String, Integer>) curUnionDecisions.clone();
+            newMap.put(k, index);
+            newUnionDecisions.add(newMap);
+          }
+        }
+        allUnionDecisions = newUnionDecisions;
+      }
+    }
+
+    //
+    // Now execute all possible union decisions
+    //
+    for (Map<String, Integer> targetUnionDecisions: allUnionDecisions) {
+      pr = internalParse(str, targetUnionDecisions, true);
+      if (pr != null && pr.hasData()) {
+        return (GenericContainer) pr.getData();
+      }
+    }
+    //System.err.println("Blargh!!  Failed on " + str);
+    return null;
   }
-  abstract ParseResult internalParse(String s);
+  abstract ParseResult internalParse(String s, Map<String, Integer> targetUnionDecisions, boolean mustConsumeStr);
+  abstract Map<String, Set<Integer>> findCandidateUnionDecisions();
+  abstract List<String> getBases();
 
   /**
    * Read/write to disk
@@ -107,6 +152,8 @@ public abstract class InferredType implements Writable {
    */
   public abstract Schema getAvroSchema();
   public abstract InferredType hoistUnions();
+  public abstract List<InferredType> materializeWithoutUnions();
+  abstract InferredType duplicate();
   public String getName() {
     return name;
   }
@@ -121,6 +168,7 @@ public abstract class InferredType implements Writable {
 class BaseType extends InferredType {
   int tokenClassIdentifier;
   String tokenParameter;
+  Schema schema = null;
 
   static int fieldCounter = 0;
   public BaseType() {
@@ -128,47 +176,48 @@ class BaseType extends InferredType {
   public BaseType(Token.AbstractToken token) {
     this.tokenClassIdentifier = token.getClassId();
     this.tokenParameter = token.getParameter();
+    this.schema = computeAvroSchema();
+  }
+  public BaseType(int tokenClassIdentifier, String tokenParameter) {
+    this.tokenClassIdentifier = tokenClassIdentifier;
+    this.tokenParameter = tokenParameter;
+    this.schema = computeAvroSchema();
   }
   public InferredType hoistUnions() {
     return this;
   }
-  public Schema getAvroSchema() {
+  public List<InferredType> materializeWithoutUnions() {
+    List<InferredType> toReturn = new ArrayList<InferredType>();
+    toReturn.add(this.duplicate());
+    return toReturn;
+  }
+  InferredType duplicate() {
+    return new BaseType(tokenClassIdentifier, tokenParameter);
+  }
+
+  Schema computeAvroSchema() {
     return Token.AbstractToken.createAvroSchema(tokenClassIdentifier, tokenParameter);
   }
-  ParseResult internalParse(String s) {
-    /**
-    System.err.println("BASE PARSE FOR " + toString());
+  public Schema getAvroSchema() {
+    return schema;
+  }
+  ParseResult internalParse(String s, Map<String, Integer> targetUnionDecisions, boolean mustConsumeStr) {
     List<Token.AbstractToken> outputToks = new ArrayList<Token.AbstractToken>();
-    String newStr = Tokenizer.attemptParse(tokenClassIdentifier, tokenParameter, outputToks);
-    if (newStr == null) {
+    String newStr = Tokenizer.attemptParse(tokenClassIdentifier, tokenParameter, s, outputToks);
+    if (newStr == null || (mustConsumeStr && newStr.trim().length()!=0)) {
       return null;
     }
-    **/
-    //
-    // REMIND - how do I get ParseResult to be parameterized with the correct GenericData subclass?
-    //
-    //return new ParseResult(, Token.AbstractToken.hasData(tokenClassIdentifier), newStr);
-    /**
-    Matcher m = Tokenizer.intPattern.matcher(s);
-    if (Token.AbstractToken.hasData(tokenClassIdentifier) && m.lookingAt()) {
-      int lastGroupChar = m.end(m.groupCount());
-      String newS = "";
-      if (s.length() > lastGroupChar) {
-        newS = s.substring(lastGroupChar);
-      }
-      Integer i = null;
-      try {
-        i = new Integer(Integer.parseInt(m.group(1)));
-      } catch (NumberFormatException nfe) {
-        nfe.printStackTrace();
-      }
-      return new ParseResult(i, true, newS);
-    } else {
-      s = s.substring(1);
-      return new ParseResult(null, false, s);
-    }
-    **/
-    return null;
+    assert(outputToks.size()==1);
+    // outputToks should contain just one result.
+    return new ParseResult(outputToks.get(0).get(), Token.AbstractToken.hasData(tokenClassIdentifier), newStr);
+  }
+  Map<String, Set<Integer>> findCandidateUnionDecisions() {
+    return new HashMap<String, Set<Integer>>();
+  }
+  List<String> getBases() {
+    List<String> tr = new ArrayList<String>();
+    tr.add(toString());
+    return tr;
   }
   public String toString() {
     return "Base: " + Token.AbstractToken.getStrDesc(tokenClassIdentifier, tokenParameter) + " ";
@@ -187,6 +236,7 @@ class BaseType extends InferredType {
     } else {
       this.tokenParameter = null;
     }
+    this.schema = computeAvroSchema();
   }
   public void write(DataOutput out) throws IOException {
     out.writeInt(tokenClassIdentifier);
@@ -206,11 +256,16 @@ class BaseType extends InferredType {
 class StructType extends InferredType {
   List<InferredType> structTypes;
   static int recordCounter = 0;
+  Schema schema;
 
   public StructType() {
   }
   public StructType(List<InferredType> structTypes) {
     this.structTypes = structTypes;
+    this.schema = computeAvroSchema();
+  }
+  void addElt(InferredType structElt) {
+    this.structTypes.add(structElt);
   }
   public InferredType hoistUnions() {
     List<InferredType> newStructTypes = new ArrayList<InferredType>();
@@ -219,7 +274,48 @@ class StructType extends InferredType {
     }
     return new StructType(newStructTypes);
   }
+  public List<InferredType> materializeWithoutUnions() {
+    List<InferredType> newStructs = new ArrayList<InferredType>();
+
+    for (int i = 0; i < structTypes.size(); i++) {
+      List<InferredType> curTrees = structTypes.get(i).materializeWithoutUnions();
+
+      if (i == 0) {
+        for (int j = 0; j < curTrees.size(); j++) {
+          List<InferredType> curTypeList = new ArrayList<InferredType>();
+          curTypeList.add(curTrees.get(j));
+          newStructs.add(new StructType(curTypeList));
+        }
+      } else {
+        List<InferredType> evenNewerStructs = new ArrayList<InferredType>();
+        evenNewerStructs.addAll(newStructs);
+        for (int j = 1; j < curTrees.size(); j++) {         
+          for (int k = 0; k < newStructs.size(); k++) {
+            evenNewerStructs.add(newStructs.get(k).duplicate());
+          }
+        }
+        for (int j = 0; j < curTrees.size(); j++) {
+          for (int k = 0; k < evenNewerStructs.size(); k++) {
+            ((StructType) evenNewerStructs.get(k)).addElt(curTrees.get(j));
+          }
+        }
+        newStructs = evenNewerStructs;
+      }
+    }
+    return newStructs;
+  }
+  InferredType duplicate() {
+    List<InferredType> newElts = new ArrayList<InferredType>();
+    for (InferredType elt: structTypes) {
+      newElts.add(elt.duplicate());
+    }
+    return new StructType(newElts);
+  }
+
   public Schema getAvroSchema() {
+    return schema;
+  }
+  Schema computeAvroSchema() {
     List<Schema.Field> fields = new ArrayList<Schema.Field>();
     for (InferredType it: structTypes) {
       Schema itS = it.getAvroSchema();
@@ -235,7 +331,7 @@ class StructType extends InferredType {
 
   public String toString() {
     StringBuffer buf = new StringBuffer();
-    buf.append("Struct: (");
+    buf.append("(Struct: ");
     for (InferredType it: structTypes) {
       buf.append(it.toString() + ", ");
     }
@@ -258,6 +354,7 @@ class StructType extends InferredType {
     for (int i = 0; i < numStructTypes; i++) {
       structTypes.add(InferredType.readType(in));
     }
+    this.schema = computeAvroSchema();
   }
   public void write(DataOutput out) throws IOException {
     out.write(STRUCT_TYPE);
@@ -270,17 +367,16 @@ class StructType extends InferredType {
   /**
    * Parse the given string, return resulting data if appropriate.
    */
-  ParseResult internalParse(String s) {
+  ParseResult internalParse(String s, Map<String, Integer> targetUnionDecisions, boolean mustConsumeStr) {
     boolean hasData = false;
-    Schema localSchema = getAvroSchema();
-    GenericData.Record gdr = new GenericData.Record(localSchema);
+    GenericData.Record gdr = new GenericData.Record(getAvroSchema());
     String currentStr = s;
 
     for (InferredType subelt: structTypes) {
       if (currentStr.length() == 0) {
-        break;
+        return null;
       }
-      ParseResult pr = subelt.internalParse(currentStr);
+      ParseResult pr = subelt.internalParse(currentStr, targetUnionDecisions, false);
       if (pr == null) {
         return null;
       }
@@ -290,28 +386,59 @@ class StructType extends InferredType {
       }
       currentStr = pr.getRemainingString();
     }
+    if (mustConsumeStr && currentStr.trim().length() != 0) {
+      return null;
+    }
     return new ParseResult(gdr, hasData, currentStr);
+  }
+  Map<String, Set<Integer>> findCandidateUnionDecisions() {
+    Map<String, Set<Integer>> candidateUnionDecisions = new HashMap<String, Set<Integer>>();
+    for (InferredType subelt: structTypes) {
+      candidateUnionDecisions.putAll(subelt.findCandidateUnionDecisions());
+    }
+    return candidateUnionDecisions;
+  }
+  List<String> getBases() {
+    List<String> tr = new ArrayList<String>();
+    for (InferredType subelt: structTypes) {
+      tr.addAll(subelt.getBases());
+    }
+    return tr;
   }
 }
 
 class ArrayType extends InferredType {
   InferredType bodyType;
   static int arrayCounter = 0;
+  Schema schema = null;
 
   public ArrayType() {
   }
   public ArrayType(InferredType bodyType) {
     this.bodyType = bodyType;
+    this.schema = computeAvroSchema();
   }
   public InferredType hoistUnions() {
     return new ArrayType(bodyType.hoistUnions());
   }
+  public List<InferredType> materializeWithoutUnions() {
+    List<InferredType> newArrays = new ArrayList<InferredType>();
+    for (InferredType subtype: bodyType.materializeWithoutUnions()) {
+      newArrays.add(new ArrayType(subtype));
+    }
+    return newArrays;
+  }
+  InferredType duplicate() {
+    return new ArrayType(bodyType);
+  }
   public Schema getAvroSchema() {
-    Schema s = Schema.createArray(bodyType.getAvroSchema());
-    return s;
+    return schema;
+  }
+  Schema computeAvroSchema() {
+    return Schema.createArray(bodyType.getAvroSchema());
   }
   public String toString() {
-    return "Array: (" + bodyType.toString() + ") ";
+    return "(Array: " + bodyType.toString() + ") ";
   }
   public double getDescriptionCost() {
     return CARD_COST + bodyType.getDescriptionCost();
@@ -322,14 +449,15 @@ class ArrayType extends InferredType {
   /**
    * Parse the given string, return resulting data if appropriate.
    */
-  ParseResult internalParse(String s) {
+  ParseResult internalParse(String s, Map<String, Integer> targetUnionDecisions, boolean mustConsumeStr) {
     boolean hasData = false;
     Schema localSchema = getAvroSchema();
     GenericData.Array gda = new GenericData.Array(5, localSchema);
+    Map<String, Integer> curUnionDecisions = new HashMap<String, Integer>();
     String currentStr = s;
 
     while (true) {
-      ParseResult pr = bodyType.internalParse(s);
+      ParseResult pr = bodyType.internalParse(s, targetUnionDecisions, false);
       if (pr == null) {
         break;
       }
@@ -338,11 +466,21 @@ class ArrayType extends InferredType {
       gda.add(pr.getData());
       currentStr = pr.getRemainingString();
     }
+    if (mustConsumeStr && currentStr.trim().length() != 0) {
+      return null;
+    }
     return new ParseResult(gda, true, currentStr);
+  }
+  Map<String, Set<Integer>> findCandidateUnionDecisions() {
+    return bodyType.findCandidateUnionDecisions();
+  }
+  List<String> getBases() {
+    return bodyType.getBases();
   }
 
   public void readFields(DataInput in) throws IOException {
     bodyType = InferredType.readType(in);
+    this.schema = computeAvroSchema();
   }
   public void write(DataOutput out) throws IOException {
     out.write(ARRAY_TYPE);
@@ -353,11 +491,13 @@ class ArrayType extends InferredType {
 class UnionType extends InferredType {
   List<InferredType> unionTypes;
   static int unionCounter = 0;
+  Schema schema = null;
 
   public UnionType() {
   }
   public UnionType(List<InferredType> unionTypes) {
     this.unionTypes = unionTypes;
+    this.schema = computeAvroSchema();
   }
   public InferredType hoistUnions() {
     List<InferredType> newUnionTypes = new ArrayList<InferredType>();
@@ -373,7 +513,27 @@ class UnionType extends InferredType {
     }
     return new UnionType(newUnionTypes);
   }
+
+  public List<InferredType> materializeWithoutUnions() {
+    List<InferredType> allOptions = new ArrayList<InferredType>();
+    for (InferredType branch: unionTypes) {
+      allOptions.addAll(branch.materializeWithoutUnions());
+    }
+    return allOptions;
+  }
+
+  InferredType duplicate() {
+    List<InferredType> newBranches = new ArrayList<InferredType>();
+    for (InferredType branch: unionTypes) {
+      newBranches.add(branch.duplicate());
+    }
+    return new UnionType(newBranches);
+  }
+
   public Schema getAvroSchema() {
+    return schema;
+  }
+  Schema computeAvroSchema() {
     HashSet<String> observedSchemas = new HashSet<String>();
     List<Schema> fields = new ArrayList<Schema>();
     for (InferredType it: unionTypes) {
@@ -387,27 +547,81 @@ class UnionType extends InferredType {
         fields.add(it.getAvroSchema());
       }
     }
-
-    Schema s = Schema.createUnion(fields);
-    return s;
+    return Schema.createUnion(fields);
   }
   /**
    * Parse the given string, return resulting data if appropriate.
    */
-  ParseResult internalParse(String s) {
-    String currentStr = s;
-
-    for (InferredType subelt: unionTypes) {
-      ParseResult pr = subelt.internalParse(currentStr);
-      if (pr != null) {
-        return new ParseResult(pr.getData(), pr.hasData(), pr.getRemainingString());
+  ParseResult internalParse(String s, Map<String, Integer> targetUnionDecisions, boolean mustConsumeStr) {
+    //
+    // If there's no target decision, then go ahead and try all branches.
+    //
+    if (targetUnionDecisions == null || targetUnionDecisions.get(name) == null) {
+      for (InferredType subelt: unionTypes) {
+        ParseResult pr = subelt.internalParse(s, targetUnionDecisions, false);
+        if (pr != null && (!mustConsumeStr || (mustConsumeStr && pr.getRemainingString().trim().length() == 0))) {
+          return new ParseResult(pr.getData(), pr.hasData(), pr.getRemainingString());
+        }
       }
+      return null;
+    }
+
+    //
+    // If there is a target decision, then carry it out.
+    //
+    InferredType subelt = unionTypes.get(targetUnionDecisions.get(name));
+    ParseResult pr = subelt.internalParse(s, targetUnionDecisions, false);
+    if (pr != null && (!mustConsumeStr || (mustConsumeStr && pr.getRemainingString().trim().length() == 0))) {
+      return new ParseResult(pr.getData(), pr.hasData(), pr.getRemainingString());
     }
     return null;
   }
+
+  /**
+   */
+  boolean isPrefixOf(List<String> a, List<String> b) {
+    for (int i = 0; i < a.size(); i++) {
+      if (i >= b.size() || a.get(i).compareTo(b.get(i)) != 0) {
+        return false;
+      }
+    }
+    return true;
+  }
+ 
+  /**
+   */
+  Map<String, Set<Integer>> findCandidateUnionDecisions() {
+    HashSet<Integer> curDecisions = new HashSet<Integer>();
+    for (int i = 0; i < unionTypes.size(); i++) {
+      for (int j = i+1; j < unionTypes.size(); j++) {
+        List<String> iBases = unionTypes.get(i).getBases();
+        List<String> jBases = unionTypes.get(j).getBases();
+        if (isPrefixOf(iBases, jBases) || isPrefixOf(jBases, iBases)) {
+          curDecisions.add(i);
+          curDecisions.add(j);
+        }
+      }
+    }
+    Map<String, Set<Integer>> candidateUnionDecisions = new HashMap<String, Set<Integer>>();
+    for (InferredType subelt: unionTypes) {
+      candidateUnionDecisions.putAll(subelt.findCandidateUnionDecisions());
+    }
+    if (curDecisions.size() > 0) {
+      candidateUnionDecisions.put(name, curDecisions);
+    }
+    return candidateUnionDecisions;
+  }
+
+  /**
+   */
+  List<String> getBases() {
+    // We stop the base-evaluation when we hit a union.
+    return new ArrayList<String>();
+  }
+
   public String toString() {
     StringBuffer buf = new StringBuffer();
-    buf.append("Union: (");
+    buf.append("(Union (" + unionTypes.size() + "): ");
     for (InferredType it: unionTypes) {
       buf.append(it.toString() + ", ");
     }
@@ -426,13 +640,14 @@ class UnionType extends InferredType {
   }
   public void readFields(DataInput in) throws IOException {
     int numUnionElts = in.readInt();
+    this.unionTypes = new ArrayList<InferredType>();
     for (int i = 0; i < numUnionElts; i++) {
       unionTypes.add(InferredType.readType(in));
     }
+    this.schema = computeAvroSchema();
   }
   public void write(DataOutput out) throws IOException {
     out.write(UNION_TYPE);
-    unionTypes = new ArrayList<InferredType>();
     out.writeInt(unionTypes.size());
     for (InferredType it: unionTypes) {
       it.write(out);

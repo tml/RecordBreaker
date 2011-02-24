@@ -63,15 +63,15 @@ public class LearnAvro {
     // Infer type structure from the tokenized chunks
     //
     long start = System.currentTimeMillis();
+    System.err.println("Number of chunks: " + allChunks.size());
     InferredType typeTree = TypeInference.infer(allChunks);
     long end = System.currentTimeMillis();
     double loadTime = (start - startRead) / 1000.0;
     double inferTime = (end - start) / 1000.0;
     double totalTime = (end - startRead) / 1000.0;
-    System.err.println("Total elapsed time: " + totalTime);
     System.err.println("Elapsed load time: " + loadTime);
     System.err.println("Elapsed inference time: " + inferTime);
-    System.err.println("Ratio load-to-inference: " + (loadTime / inferTime));
+    System.err.println("Total execution time: " + totalTime);
 
     //
     // The existing type tree is now correct, but could probably be more succinct.
@@ -82,38 +82,6 @@ public class LearnAvro {
     // Should every top-level type be ARRAY, so as to allow repeated log lines?
     // Or does the Avro format allow an implict top-level repeating structure?
     //
-
-    //
-    // Apply the typetree's parser.
-    //
-    if (emitAvro) {
-      Schema schema = typeTree.getAvroSchema();
-      System.err.println("Obtained schema.");
-      GenericDatumWriter gdWriter = new GenericDatumWriter(schema);
-      BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(dataFile));
-      JsonEncoder encoder = new JsonEncoder(schema, out);
-      try {
-        in = new BufferedReader(new FileReader(f));
-        try {
-          String s = in.readLine();
-          int lineno = 0;
-          while (s != null) {
-            System.err.print("Parsing: " + s + "...");
-            GenericContainer gct = typeTree.parse(s);
-            System.err.println("done!");
-            gdWriter.write(gct, encoder);
-            System.err.println("Data for line " + lineno + ": " + gct);
-            s = in.readLine();
-            lineno++;
-          }      
-        } finally {
-          in.close();
-        }
-      } finally {
-        encoder.flush();
-        out.close();
-      }
-    }
 
     //
     // Dump the results.  We emit:
@@ -133,7 +101,47 @@ public class LearnAvro {
     } finally {
       outd.close();
     }
-    
+
+    //
+    // Apply the typetree's parser.
+    //
+    if (emitAvro) {
+      int numGoodParses = 0;
+      int lineno = 0;
+      Schema schema = typeTree.getAvroSchema();
+      GenericDatumWriter gdWriter = new GenericDatumWriter(schema);
+      BufferedOutputStream out2 = new BufferedOutputStream(new FileOutputStream(dataFile));
+      JsonEncoder encoder = new JsonEncoder(schema, out2);
+      try {
+        in = new BufferedReader(new FileReader(f));
+        try {
+          //System.err.println("Type tree root is " + typeTree);
+          String str = in.readLine();
+          while (str != null) {
+            GenericContainer gct = typeTree.parse(str);
+
+            if (gct != null) {
+              numGoodParses++;
+              gdWriter.write(gct, encoder);
+              //System.err.println("Good parse " + numGoodParses);
+            } else {
+              System.err.println("unparsed line: '" + str + "'");
+            }
+            str = in.readLine();
+            lineno++;
+          }      
+        } finally {
+          in.close();
+        }
+      } finally {
+        encoder.flush();
+        out2.close();
+      }
+      System.err.println();
+      System.err.println("Total # input lines: " + lineno);
+      System.err.println("Total # lines parsed correctly: " + numGoodParses);
+    }
+
     return null;
   }
 

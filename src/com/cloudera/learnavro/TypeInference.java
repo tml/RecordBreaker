@@ -89,7 +89,6 @@ public class TypeInference {
    * The oracle() function attempts to predict the best type for the data given by 'chunks'.
    */
   private static TypeProphecy oracle(List<List<Token.AbstractToken>> chunks) {
-
     //////////////////////////////////////////////////////////////
     // Phase 1: Handling chunks that appear homogenous (at this meta-level, at least)
     //////////////////////////////////////////////////////////////
@@ -121,7 +120,6 @@ public class TypeInference {
       // If so, grab an example from the column
       Token.AbstractToken prizeToken = chunks.get(0).get(0);
       if (! (prizeToken instanceof Token.MetaToken)) {
-        //System.err.println("BASE-2");
         // If it's not a MetaToken, then it's easy: we prophesy a data column consisting of a single basic type
         return new BaseProphecy(prizeToken);
       } else {
@@ -227,17 +225,35 @@ public class TypeInference {
       // If there is a single profile across all the chunks, then we create a struct.
       // If there are multiple profiles, then we create a union.
       //
+
+      //
+      // This is not being computed correctly.  We need to include the inter-identified tokens.
+      // Right now, we could have very different inter-identified-token items, and we would consider
+      // them all to be identical.
+      //
       Set<String> allTypeProfiles = new HashSet<String>();
       for (List<Token.AbstractToken> chunk: chunks) {
         StringBuffer curTypeProfile = new StringBuffer();
+        StringBuffer curField = new StringBuffer();
+        curField.append("(");
         for (Token.AbstractToken tok: chunk) {
           if (bestClusterTypes.contains(tok.getId())) {
-            curTypeProfile.append(tok.getId() + "_");
+            curField.append(")");
+            curTypeProfile.append(curField.toString());
+            curTypeProfile.append("_");
+            curTypeProfile.append("(" + tok.getId() + ")");
+            curTypeProfile.append("_");
+            curField = new StringBuffer();
+            curField.append("(");
+          } else {
+            curField.append(tok.getId() + ",");
           }
         }
+        curField.append(")");
+        curTypeProfile.append(curField.toString());
         allTypeProfiles.add(curTypeProfile.toString());
       }
-        
+
       //
       // Is it a STRUCT or a UNION?
       //
@@ -318,6 +334,7 @@ public class TypeInference {
           List<List<Token.AbstractToken>> chunkList = structChunks.get(chunkId);
           structChunkList.add(chunkList);
         }
+        //System.err.println("STRUCT-2");
         return new StructProphecy(structChunkList);
       } else {
         // It's a UNION.
@@ -326,11 +343,25 @@ public class TypeInference {
         Map<String, List<List<Token.AbstractToken>>> unionMap = new HashMap<String, List<List<Token.AbstractToken>>>();
         for (List<Token.AbstractToken> chunk: chunks) {
           StringBuffer curTypeProfile = new StringBuffer();
+          StringBuffer curField = new StringBuffer();
+          curField.append("(");
           for (Token.AbstractToken tok: chunk) {
             if (bestClusterTypes.contains(tok.getId())) {
               curTypeProfile.append(tok.getId() + "_");
+              curField.append(")");
+              curTypeProfile.append(curField.toString());
+              curTypeProfile.append("_");
+              curTypeProfile.append("(" + tok.getId() + ")");
+              curTypeProfile.append("_");
+              curField = new StringBuffer();
+              curField.append("(");
+            } else {
+              curField.append(tok.getId() + ",");
             }
           }
+          curField.append(")");
+          curTypeProfile.append(curField.toString());
+
           List<List<Token.AbstractToken>> unionChunks = unionMap.get(curTypeProfile.toString());
           if (unionChunks == null) {
             unionChunks = new ArrayList<List<Token.AbstractToken>>();
@@ -444,7 +475,7 @@ public class TypeInference {
           middles.addAll(middleGroup);
           postambles.add(postamble);
         }
-
+        //System.err.println("ARRAY-1");
         return new ArrayProphecy(preambles, middles, postambles);
       } else {
         //System.err.println("UNION-2");

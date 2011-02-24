@@ -4,6 +4,8 @@ package com.cloudera.learnavro;
 import java.io.*;
 import java.util.*;
 import org.apache.avro.Schema;
+import org.apache.avro.util.Utf8;
+import org.apache.avro.generic.GenericData;
 
 /*********************************************************
  * Token is one of a handful of data types we expect to appear broadly in 
@@ -27,7 +29,7 @@ public class Token {
   final static int WHITESPACE_TOKENCLASSID = 10;
   final static int NOOP_TOKENCLASSID = 11;
   
-  static class AbstractToken {
+  static abstract class AbstractToken {
     public static boolean hasData(int tokenClassIdentifier) {
     switch (tokenClassIdentifier) {
     case META_TOKENCLASSID:
@@ -151,6 +153,7 @@ public class Token {
     public String getId() {
       return getStrDesc(classId, tokenParameter);
     }
+    public abstract Object get();
   }
 
   static class MetaToken extends AbstractToken {
@@ -187,6 +190,13 @@ public class Token {
     public String getParameter() {
       return "" + start.getChar();
     }
+    public Object get() {
+      ArrayList<Object> getResults = new ArrayList<Object>();
+      for (AbstractToken tok: contents) {
+        getResults.add(tok.get());
+      }
+      return getResults;
+    }
   }
 
   static class CharToken extends AbstractToken {
@@ -201,6 +211,9 @@ public class Token {
     public String toString() {
       return "CHAR(" + c + ")";
     }
+    public Object get() {
+      return c;
+    }
   }
 
   static class IPAddrToken extends AbstractToken {
@@ -211,6 +224,9 @@ public class Token {
     }
     public String toString() {
       return "IPADDR(" + s + ")";
+    }
+    public Object get() {
+      return new Utf8(s);
     }
   }
 
@@ -223,10 +239,13 @@ public class Token {
     public String toString() {
       return "PERMISSION-BITS(" + s + ")";
     }
+    public Object get() {
+      return new Utf8(s);
+    }
   }
 
   static class DateToken extends AbstractToken {
-    String month;
+    int month;
     int day;
     int year;
     public DateToken(String dayStr, String monthStr) throws IOException {
@@ -239,7 +258,7 @@ public class Token {
       } catch (NumberFormatException nfe) {
         nfe.printStackTrace();
       }
-      this.month = monthStr;
+      this.month = convertMonthStr(monthStr);
       this.year = -1;
     }
     public DateToken(String dayStr, String monthStr, String yrStr) throws IOException {
@@ -252,7 +271,7 @@ public class Token {
       } catch (NumberFormatException nfe) {
         nfe.printStackTrace();
       }
-      this.month = monthStr;
+      this.month = convertMonthStr(monthStr);
       try {
         this.year = Integer.parseInt(yrStr);
         if (year < EPOCH_START_YEAR) {
@@ -262,8 +281,62 @@ public class Token {
         nfe.printStackTrace();
       }
     }
+    int convertMonthStr(String monthStr) {
+      try {
+        return Integer.parseInt(monthStr);
+      } catch (NumberFormatException nfe) {
+      }
+      if ("jan".equalsIgnoreCase(monthStr)) {
+        return 1;
+      }
+      if ("feb".equalsIgnoreCase(monthStr)) {
+        return 2;
+      }
+      if ("mar".equalsIgnoreCase(monthStr)) {
+        return 3;
+      }
+      if ("apr".equalsIgnoreCase(monthStr)) {
+        return 4;
+      }
+      if ("may".equalsIgnoreCase(monthStr)) {
+        return 5;
+      }
+      if ("jun".equalsIgnoreCase(monthStr)) {
+        return 6;
+      }
+      if ("jul".equalsIgnoreCase(monthStr)) {
+        return 7;
+      }
+      if ("aug".equalsIgnoreCase(monthStr)) {
+        return 8;
+      }
+      if ("sep".equalsIgnoreCase(monthStr)) {
+        return 9;
+      }
+      if ("oct".equalsIgnoreCase(monthStr)) {
+        return 10;
+      }
+      if ("nov".equalsIgnoreCase(monthStr)) {
+        return 11;
+      }
+      if ("dec".equalsIgnoreCase(monthStr)) {
+        return 12;
+      }
+      return -1;
+    }
     public String toString() {
       return "DATE(" + day + ", " + month + ", " + year + ")";
+    }
+    public Object get() {
+      List<Schema.Field> fields = new ArrayList<Schema.Field>();
+      fields.add(new Schema.Field("month", Schema.create(Schema.Type.INT), "", null));
+      fields.add(new Schema.Field("day", Schema.create(Schema.Type.INT), "", null));
+      fields.add(new Schema.Field("year", Schema.create(Schema.Type.INT), "", null));
+      GenericData.Record gdr = new GenericData.Record(Schema.createRecord(fields));
+      gdr.put("month", month);
+      gdr.put("day", day);
+      gdr.put("year", year);
+      return gdr;
     }
   }
 
@@ -284,6 +357,17 @@ public class Token {
     public String toString() {
       return "TIME(" + hr + ":" + min + ":" + sec + ")";
     }
+    public Object get() {
+      List<Schema.Field> fields = new ArrayList<Schema.Field>();
+      fields.add(new Schema.Field("hrs", Schema.create(Schema.Type.INT), "", null));
+      fields.add(new Schema.Field("mins", Schema.create(Schema.Type.INT), "", null));
+      fields.add(new Schema.Field("secs", Schema.create(Schema.Type.INT), "", null));
+      GenericData.Record gdr = new GenericData.Record(Schema.createRecord(fields));
+      gdr.put("hrs", hr);
+      gdr.put("mins", min);
+      gdr.put("secs", sec);
+      return gdr;
+    }
   }
 
   static class IntToken extends AbstractToken {
@@ -298,6 +382,9 @@ public class Token {
     }
     public String toString() {
       return "INT(" + i + ")";
+    }
+    public Object get() {
+      return i;
     }
   }
 
@@ -314,6 +401,9 @@ public class Token {
     public String toString() {
       return "FLOAT(" + f + ")";
     }
+    public Object get() {
+      return f;
+    }
   }
 
   static class StringToken extends AbstractToken {
@@ -325,6 +415,9 @@ public class Token {
     public String toString() {
       return "STRING(" + s + ")";
     }
+    public Object get() {
+      return new Utf8(s);
+    }
   }
 
   static class EOLToken extends AbstractToken {
@@ -333,6 +426,9 @@ public class Token {
     }
     public String toString() {
       return "EOL()";
+    }
+    public Object get() {
+      return null;
     }
   }
 
@@ -343,6 +439,9 @@ public class Token {
     public String toString() {
       return "WS()";
     }
+    public Object get() {
+      return null;
+    }
   }
 
   static class NoopToken extends AbstractToken {
@@ -351,6 +450,9 @@ public class Token {
     }
     public String toString() {
       return "NOOP()";
+    }
+    public Object get() {
+      return null;
     }
   }
 }
