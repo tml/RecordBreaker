@@ -12,7 +12,7 @@ import java.util.regex.*;
  *********************************************************/
 public class Tokenizer {
   // The components of possible date patterns
-  static String monthPatternStrs[] = {"(Jan|jan|Feb|feb|Mar|mar|Apr|apr|May|may|Jun|jun|Jul|jul|Aug|aug|Sep|sep|Oct|oct|Nov|nov|Dec|dec)", "([01]*\\d)"};
+  static String monthPatternStrs[] = {"(January|Jan|jan|February|Feb|feb|March|Mar|mar|April|Apr|apr|May|may|June|Jun|jun|July|Jul|jul|August|Aug|aug|September|Sep|sep|October|Oct|oct|November|Nov|nov|December|Dec|dec)", "([01]*\\d)"};
   static String dateSeparatorPatternStrs[] = {"(?:\\s+)", "(?:\\.)", "(?:\\/)"};
   static String dateDayPatternStr = "([0123]?\\d)";
   static String dateYearPatternStr = "([12]\\d{3})";
