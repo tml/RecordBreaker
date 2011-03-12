@@ -173,6 +173,6 @@ public class LearnAvro {
 
     LearnAvro la = new LearnAvro();
     RecordFormat rf = la.inferRecordFormat(f, outdir, emitAvro);
-    System.err.println("RecordFormat: " + rf);
+    //System.err.println("RecordFormat: " + rf);
   }
 }
