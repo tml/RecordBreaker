@@ -150,7 +150,7 @@ public class LearnAvro {
   //////////////////////////////////////////
   public static void main(String argv[]) throws IOException {
     if (argv.length < 2) {
-      System.err.println("Usage: LearnAvro <input-datafile> <outdir> (-emitAvro true|false)");
+      System.err.println("Usage: LearnAvro <input-datafile> <outdir> (-emitAvro (true)|false)");
       return;
     }
     boolean emitAvro = true;
