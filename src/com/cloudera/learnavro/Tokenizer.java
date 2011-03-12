@@ -12,7 +12,7 @@ import java.util.regex.*;
  *********************************************************/
 public class Tokenizer {
   // The components of possible date patterns
-  static String monthPatternStrs[] = {"(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)", "([01]*\\d)"};
+  static String monthPatternStrs[] = {"(Jan|jan|Feb|feb|Mar|mar|Apr|apr|May|may|Jun|jun|Jul|jul|Aug|aug|Sep|sep|Oct|oct|Nov|nov|Dec|dec)", "([01]*\\d)"};
   static String dateSeparatorPatternStrs[] = {"(?:\\s+)", "(?:\\.)", "(?:\\/)"};
   static String dateDayPatternStr = "([0123]?\\d)";
   static String dateYearPatternStr = "([12]\\d{3})";
@@ -29,7 +29,7 @@ public class Tokenizer {
   static Pattern intRangePattern = Pattern.compile("(\\d+)-(\\d+)");
   static Pattern floatPattern = Pattern.compile("([+-]?\\d*\\.\\d+)");
   static Pattern floatRangePattern = Pattern.compile("(\\d*\\.\\d+)-(\\d*\\.\\d+)");
-  static Pattern stringPattern = Pattern.compile("((?:[\\S&&[^\\,\\;\\|\\[\\]\\{\\}\\<\\>\\(\\)\\']]){2,})");
+  static Pattern stringPattern = Pattern.compile("((?:[\\S&&[^\\\"\\,\\;\\|\\[\\]\\{\\}\\<\\>\\(\\)\\']]){2,})");
   static Pattern charPattern = Pattern.compile("(\\S)");
   static Pattern eolPattern = Pattern.compile("(\\n)");
   static Pattern wsPattern = Pattern.compile("(\\s+)");
@@ -52,7 +52,7 @@ public class Tokenizer {
    * parsed, or else that branch of the parse-tree is invalid.  This is what happens inside
    * InferredType.BaseType.internalParse().
    */
-  public static String attemptParse(int tokenClassId, String inputStr, List<Token.AbstractToken> outputToks) {
+  public static String attemptParse(int tokenClassId, String tokenParameter, String inputStr, List<Token.AbstractToken> outputToks) {
     switch (tokenClassId) {
     case Token.IPADDR_TOKENCLASSID: {
       Matcher m = ipAddrPattern.matcher(inputStr);
@@ -136,6 +136,17 @@ public class Tokenizer {
       m = timePattern2.matcher(inputStr);
       if (m.lookingAt()) {
         outputToks.add(new Token.TimeToken(m.group(1), m.group(2), "00"));
+        return cutChunk(m, inputStr);
+      }
+      return null;
+    }
+    case Token.CHAR_TOKENCLASSID: {
+      Matcher m = charPattern.matcher(inputStr);
+      if (m.lookingAt()) {
+        if (tokenParameter != null && ! tokenParameter.equals("" + m.group(1).charAt(0))) {
+          return null;
+        }
+        outputToks.add(new Token.CharToken(m.group(1).charAt(0)));
         return cutChunk(m, inputStr);
       }
       return null;
@@ -249,15 +260,12 @@ public class Tokenizer {
     List<Token.AbstractToken> toksSoFar = new ArrayList<Token.AbstractToken>();
 
     // We now repeatedly pass through a series of text-extractor tests.
-    //System.err.println("PARSE: " + s);
     while (curS.length() > 0) {
-      //System.err.println("CurS: '" + curS + "', tokSetSize: " + toksSoFar.size());
       int newStart = -1;
 
       // META
       char startChar = curS.charAt(0);
       if (complements.get("" + startChar) != null) {
-        //System.err.println("START CHAR: " + startChar);
         String closeChar = complements.get("" + startChar);
         int closeIndex = curS.indexOf(closeChar, 1);
         if (closeIndex >= 0) {
@@ -269,14 +277,14 @@ public class Tokenizer {
 
       // IP ADDR
       // PERMISSION BITS
-      String attemptStr = attemptParse(Token.IPADDR_TOKENCLASSID, curS, toksSoFar);
+      String attemptStr = attemptParse(Token.IPADDR_TOKENCLASSID, null, curS, toksSoFar);
       if (attemptStr != null) {
         curS = attemptStr;
         continue;
       }
 
       // PERMISSION BITS
-      attemptStr = attemptParse(Token.PERMISSIONS_TOKENCLASSID, curS, toksSoFar);
+      attemptStr = attemptParse(Token.PERMISSIONS_TOKENCLASSID, null, curS, toksSoFar);
       if (attemptStr != null) {
         curS = attemptStr;
         continue;
@@ -288,14 +296,14 @@ public class Tokenizer {
       // Because of the huge number of possible date patterns, and our desire to not perform 
       // multi-token parsing, the date-processing here is a bit of a mess.
       //
-      attemptStr = attemptParse(Token.DATE_TOKENCLASSID, curS, toksSoFar);
+      attemptStr = attemptParse(Token.DATE_TOKENCLASSID, null, curS, toksSoFar);
       if (attemptStr != null) {
         curS = attemptStr;
         continue;
       }
 
       // TIME
-      attemptStr = attemptParse(Token.TIME_TOKENCLASSID, curS, toksSoFar);
+      attemptStr = attemptParse(Token.TIME_TOKENCLASSID, null, curS, toksSoFar);
       if (attemptStr != null) {
         curS = attemptStr;
         continue;
@@ -323,43 +331,42 @@ public class Tokenizer {
       }
 
       // FLOAT
-      attemptStr = attemptParse(Token.FLOAT_TOKENCLASSID, curS, toksSoFar);
+      attemptStr = attemptParse(Token.FLOAT_TOKENCLASSID, null, curS, toksSoFar);
       if (attemptStr != null) {
         curS = attemptStr;
         continue;
       }
 
       // INTEGER
-      attemptStr = attemptParse(Token.INT_TOKENCLASSID, curS, toksSoFar);
+      attemptStr = attemptParse(Token.INT_TOKENCLASSID, null, curS, toksSoFar);
       if (attemptStr != null) {
         curS = attemptStr;
         continue;
       }
 
       // STRING
-      attemptStr = attemptParse(Token.STRING_TOKENCLASSID, curS, toksSoFar);
+      attemptStr = attemptParse(Token.STRING_TOKENCLASSID, null, curS, toksSoFar);
       if (attemptStr != null) {
         curS = attemptStr;
         continue;
       }
 
       // CHAR
-      m = charPattern.matcher(curS);
-      if (m.lookingAt()) {
-        toksSoFar.add(new Token.CharToken(m.group(1).charAt(0)));
-        curS = cutChunk(m, curS);
+      attemptStr = attemptParse(Token.CHAR_TOKENCLASSID, null, curS, toksSoFar);
+      if (attemptStr != null) {
+        curS = attemptStr;
         continue;
       }
 
       // EOL-Token
-      attemptStr = attemptParse(Token.EOL_TOKENCLASSID, curS, toksSoFar);
+      attemptStr = attemptParse(Token.EOL_TOKENCLASSID, null, curS, toksSoFar);
       if (attemptStr != null) {
         curS = attemptStr;
         continue;
       }
 
       // Whitespace
-      attemptStr = attemptParse(Token.WHITESPACE_TOKENCLASSID, curS, toksSoFar);
+      attemptStr = attemptParse(Token.WHITESPACE_TOKENCLASSID, null, curS, toksSoFar);
       if (attemptStr != null) {
         curS = attemptStr;
         continue;
