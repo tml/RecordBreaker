@@ -5,7 +5,7 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 
-	<title>cloudera/LearnAvro @ GitHub</title>
+	<title>LearnAvro</title>
 	
 	<style type="text/css">
 		body {
@@ -46,20 +46,63 @@
     </div>
 
     <h1><a href="http://github.com/cloudera/LearnAvro">LearnAvro</a>
-      <span class="small">by <a href="http://github.com/cloudera">cloudera</a></span></h1>
+      <span class="small">by Michael Cafarella (University of Michigan), <a href="http://github.com/cloudera">Cloudera</a></span></h1>
 
     <div class="description">
-      Learn Avro
+      LearnAvro: Automatic structure for your HDFS data.
     </div>
 
-    <p>Main project text</p><h2>Dependencies</h2>
+   LearnAvro is a project that automatically turns your text-formatted data (logs, sensor readings, etc) into structured Avro data, without any need to write parsers or extractors.  Its goal is to dramatically reduce the time spent preparing data for analysis, enabling more time for the analysis itself.<p>
+
+<h2>Introduction</h2>
+    <p>
+    Hadoop's HDFS is often used to store large amounts of text-formatted data: log files, sensor readings, transaction histories, etc.  Much of this data is "near-structured": the data has a format that's obvious to a human observer, but is not made explicit in the file itself.  For example, the following line is an example of the <a href="http://en.wikipedia.org/wiki/Common_Log_Format">Common Log Format</a>, often used in web servers:
+<p>
+<tt>
+ 127.0.0.1 - frank [10/Oct/2000:13:55:36 -0700] "GET /apache_pb.gif HTTP/1.0" 200 2326
+</tt>
+<p>
+It contains a source IP address, followed by a user id, followed by an date and timestamp, then an HTTP request, etc.<p>
+
+When a user wants to process such "near-structured" data with MapReduce, Pig, or some similar tool, she must laboriously reconstruct the metadata that is obvious to anyone who just <i> eyeballs the data</i>.  Performing this reconstruction usually entails writing a parser or extractor, often one based on relatively brittle regular expressions.  It's true that the Common Log Format is so, uh, <i>common</i> that writing a single good parser for it is probably worthwhile.  However, there are also file listings, album track listings, temperature readings, flight schedules, and many many other kinds of data; the number of good parsers we need to write gets large, quickly.  Writing all of these straightforward extractors, again and again, is a time-consuming and error-prone pain for everyone.  We believe it is a major obstacle to faster and easier data analytics<p>
+
+The LearnAvro project aims to <i>automatically generate structure</i> for text-embedded data.  It consists of two main components:
+<ol>
+<li><b>LearnAvro</b> takes a text file as input and derives a parser that breaks lines of the file into typed fields.  For example, the above web log entry is broken into <tt>127.0.0.1</tt>, followed by <tt>frank</tt>, etc.
+<li><b>SchemaDictionary</b> takes data that's been parsed by LearnAvro and applies topic-specific labels.  For example, <tt>127.0.0.1</tt> gets labelled as <i>client ip address</i>, and <tt>frank</tt> is labelled as <tt>user id</tt>.
+</ol>
+
+    As you can probably guess, the target structured data format is <a href="http://avro.apache.org/">Avro</a>.  Avro allows efficient cross-platform data serialization, similar to <a href="http://incubator.apache.org/thrift/">Thrift</a> or <a href="http://code.google.com/p/protobuf/">Protocol Buffers</a>.  Data stored in Avro has many advantages (read this <a href="http://www.facebook.com/note.php?note_id=167777112002">overview of Avro</a> for more</a>) and many tools support Avro directly: <a href="http://hadoop.apache.org/mapreduce/">Hadoop MapReduce</a>, <a href="http://hbase.apache.org/">HBase</a>, <a href="http://pig.apache.org/">Pig</a>, and others.<p>
+    </p>
+
+<h2>Related Work</h2>
+  Our work on the LearnAvro component draws inspiration from the PADS research project (<a href="">http://www.padsproj.org/index.html</a>), in particular this <a href="http://www.padsproj.org/papers/popl08.pdf">2008 POPL paper</a> by Fisher, Walker, Zhu, and White (which itself draws on many papers in the area of information extraction and related fields).  The authors have released code for their system, written in ML.  ML is a great language, but not one that traditionally draws a large open-source community.<p>
+
+  SchemaDictionary is more generally inspired by database schema mapping systems.  (<a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.20.1842&rep=rep1&type=pdf">Clio</a> from Miller, et al., is a famous example.)  Schema mapping systems are usually designed to help database administrators merge existing databases; for example, when company A purchases company B and must then merge the employee lists.  These tools are often expensive and expect a lot of administrator attention.  In contrast, our SchemaDictionary is for busy data analysts who simply want to check out a novel dataset as quickly as possible.  It is fast and simple, but can only handle relatively simple structures (rendering it inappropriate for databases, but on target for the kind of data that is popular in text-based formats).<p>
+
+<h2>Walkthrough</h2>
+Imagine you have a very simple log of accesses to your site, stored in <i>accesses.txt</i>:<p>
+<tt>
+February 15, 2011 10:20:10 http://domain.com/post1.html 2192<br>
+February 16, 2011 11:34:42 http://domain.com/post2.html 3074<br>
+February 16, 2011 22:17:09 http://domain.com/post2.html 3074<br>
+</tt>
+<p>
+
+We can store this information in an Avro-format output file as follows:
+<tt>
+
+</tt>
+
+
+<h2>Dependencies</h2>
 <p>I depend on nothing!</p>
 <h2>Install</h2>
 <p>Install me...</p>
 <h2>License</h2>
 <p>Apache 2.0 </p>
 <h2>Authors</h2>
-<p>Mike Cafarella (mjc@roderigo.cs.washington.edu)<br/><br/>      </p>
+<p>Mike Cafarella (michjc@umich.edu)<br/><br/>      </p>
 <h2>Contact</h2>
 <p>Cloudera (github@cloudera.com)<br/>      </p>
 
