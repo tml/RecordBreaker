@@ -81,7 +81,7 @@ The LearnAvro project aims to <i>automatically generate structure</i> for text-e
   SchemaDictionary is more generally inspired by database schema mapping systems.  (<a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.20.1842&rep=rep1&type=pdf">Clio</a> from Miller, et al., is a famous example.)  Schema mapping systems are usually designed to help database administrators merge existing databases; for example, when company A purchases company B and must then merge the employee lists.  These tools are often expensive and expect a lot of administrator attention.  In contrast, our SchemaDictionary is for busy data analysts who simply want to check out a novel dataset as quickly as possible.  It is fast and simple, but can only handle relatively simple structures (rendering it inappropriate for databases, but on target for the kind of data that is popular in text-based formats).<p>
 
 <h2>Walkthrough</h2>
-Imagine you have a very simple log of accesses to your site, stored in <i>accesses.txt</i>:<p>
+Imagine you have a very simple log of accesses to your site, stored in <tt>accesses.txt</tt>:<p>
 <tt>
 February 15, 2011 10:20:10 http://domain.com/post1.html 2192<br>
 February 16, 2011 11:34:42 http://domain.com/post2.html 3074<br>
@@ -89,15 +89,17 @@ February 16, 2011 22:17:09 http://domain.com/post2.html 3074<br>
 </tt>
 <p>
 
-We run the first component, LearnAvro, as follows:
+We can now run our tools to automatically turn this text file into a structured Avro file.<p>
+
+<h3>LearnAvro</h3>
+We run the first component, LearnAvro, as follows:<p>
 <tt>
 $ bin/learnavro learn accesses.txt outdir
-</tt>
+</tt><p>
 
-This tells the learnavro tool to learn the Avro structure found in <i>accesses.txt</i>, and to write it out to the <i>outdir</i> directory.  <i>outdir</i> contains three files: <i>schema.json</i>, <i>data.avro</i>, and <i>parser.dat</i>.<p>
+This tells the learnavro tool to learn the Avro structure found in <tt>accesses.txt</tt>, and to write it out to the <tt>outdir</tt> directory.  <tt>outdir</tt> contains three files: <tt>schema.json</tt>, <tt>data.avro</tt>, and <tt>parser.dat</tt>.<p>
 
-<h3>LearnAvro Output</h3>
-The most interesting is probably <i>schema.json</i>, the program's attempt at building a JSON schema that describes the text data.  In the case of the example above, it looks like this:<p>
+The most interesting is probably <tt>schema.json</tt>, the program's attempt at building a JSON schema that describes the text data.  In the case of the example above, it looks like this:<p>
 <code>
 {<br>
 &nbsp;  "type" : "record",<br>
@@ -143,23 +145,41 @@ The most interesting is probably <i>schema.json</i>, the program's attempt at bu
 }<br>
 </code>
 
-The JSON starts by describing two records, each consisting of three integers.  The first record has fields <tt>month</tt>, <tt>day</tt>, and <tt>year</tt> and clearly describes the date that starts every line in <i>accesses.txt</i>.  The second record represents a timestamp, with fields <tt>hrs</tt>, <tt>mins</tt>, and <tt>secs</tt>.  Following these two records are a string and an integer, matching the URL and file size from the raw input file.<p>
+The JSON starts by describing two records, each consisting of three integers.  The first record has fields <tt>month</tt>, <tt>day</tt>, and <tt>year</tt> and clearly describes the date that starts every line in <tt>accesses.txt</tt>.  The second record represents a timestamp, with fields <tt>hrs</tt>, <tt>mins</tt>, and <tt>secs</tt>.  Following these two records are a string and an integer, matching the URL and file size from the raw input file.<p>
 
 All four of the top-level data values -- the date record, the timestamp record, the URL string, and the file size integer -- have nondescriptive synthetically-generated names that begin with <tt>base-</tt>.  The LearnAvro step discerns the type of each field, but not its role.  Obtaining names for these fields is the job of the SchemaDictionary.  For now, we just live with the synthetic names.<p>
 
-Next, let's look at <i>data.avro</i>, the actual Avro data.  We currently use a textual version of Avro data for clarity and debugging reasons, but we could switch to binary quite easily.  The contents of <i>data.avro</i> look like this:<p>
+Next, let's look at <tt>data.avro</tt>, the actual Avro data.  We currently use a textual version of Avro data for clarity and debugging reasons, but we could switch to binary quite easily.  The contents of <tt>data.avro</tt> look like this:<p>
 <tt>
 {"base-0":{"month":-1,"day":15,"year":2011},"base-2":{"hrs":10,"mins":30,"secs":12},"base-4":"http://domain.com/post1.html","base-6":2034} {"base-0":{"month":-1,"day":16,"year":2011},"base-2":{"hrs":9,"mins":42,"secs":57},"base-4":"http://domain.com/post2.html","base-6":3147} {"base-0":{"month":-1,"day":16,"year":2011},"base-2":{"hrs":22,"mins":12,"secs":54},"base-4":"http://domain.com/post2.html","base-6":3147}
 </tt>
 <p>
 
-The field names here reflect the contents of <i>schema.json</i>, and the values of those fields reflect the contents of <i>accesses.txt</i>.<p>
+The field names here reflect the contents of <tt>schema.json</tt>, and the values of those fields reflect the contents of <tt>accesses.txt</tt>.<p>
 
-The final LearnAvro output file is <i>parser.dat</i>.  This is a binary representation of the parser generated by LearnAvro; the program applied this parser to <i>accesses.txt</i> in order to obtain <i>data.avro</i>.  If the user wants to process more data that has the same format as <i>accesses.txt</i>, there's no need to relearn the structure; she can simply reapply the already-learned parser.<p>
+The final LearnAvro output file is <tt>parser.dat</tt>.  This is a binary representation of the parser generated by LearnAvro; the program applied this parser to <tt>accesses.txt</tt> in order to obtain <tt>data.avro</tt>.  If the user wants to process more data that has the same format as <tt>accesses.txt</tt>, there's no need to relearn the structure; she can simply reapply the already-learned parser.<p>
 
 We're now ready to apply the SchemaDictionary component.<p>
 
-<h3>SchemaDictionary Output</h3>
+<h3>SchemaDictionary</h3>
+
+Most of the time, we could now use the SchemaDictionary tool to compare the structured but anonymous <tt>data.avro</tt> and <tt>schema.json</tt> against a large number of known data types.  The tool finds the closest match and uses that match to generate labels for the anonymous fields in our new Avro file.<p>
+
+Unfortunately, we don't yet have any known data types.  Before we can compare LearnAvro's output to anything, we need to assemble a small set of known types.  Typing in the following commands:<p>
+
+<tt>bin/schemadict dict -m "Simple web access log" -a src/samples/schemas/web-data2.avro schemaDict</tt><br>
+<tt>bin/schemadict dict -m "Local bus schedule" -a src/samples/schemas/bus-schedule.avro schemaDict</tt><p>
+
+will create a new dictionary called <tt>schemaDict</tt>.  We will add to it two known data samples stored in <tt>src/samples/schemas</tt>, supplying a small comment to describe each one.  We can then display the contents of <tt>schemaDict</tt> with this command:<p>
+
+<tt>bin/schemadict dict -d schemaDict</tt><p>
+
+which should confirm that <tt>schemaDict</tt> contains the two data types seen above.  We're now ready to apply labels to our original file from LearnAvro.  Entering this command:<p>
+
+<tt>bin/schemadict learn schemaDict outdir</tt><p>
+
+will ask the SchemaDictionary tool to learn a labelset for <tt>schemaDict</tt>, using the known datatypes in <tt>outdir</tt>.  It outputs the following:<p>
+
 
 
 <h2>Dependencies</h2>
