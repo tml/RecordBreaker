@@ -103,18 +103,22 @@ public class Token {
     case PERMISSIONS_TOKENCLASSID:
       return Schema.create(Schema.Type.STRING);
     case DATE_TOKENCLASSID: {
+      Schema s = Schema.createRecord("date", "", "", false);
       List<Schema.Field> fields = new ArrayList<Schema.Field>();
       fields.add(new Schema.Field("month", Schema.create(Schema.Type.INT), "", null));
       fields.add(new Schema.Field("day", Schema.create(Schema.Type.INT), "", null));
       fields.add(new Schema.Field("year", Schema.create(Schema.Type.INT), "", null));
-      return Schema.createRecord(fields);
+      s.setFields(fields);
+      return s;
     }
     case TIME_TOKENCLASSID: {
+      Schema s = Schema.createRecord("timestamp", "", "", false);
       List<Schema.Field> fields = new ArrayList<Schema.Field>();
       fields.add(new Schema.Field("hrs", Schema.create(Schema.Type.INT), "", null));
       fields.add(new Schema.Field("mins", Schema.create(Schema.Type.INT), "", null));
       fields.add(new Schema.Field("secs", Schema.create(Schema.Type.INT), "", null));
-      return Schema.createRecord(fields);
+      s.setFields(fields);
+      return s;
     }
     case INT_TOKENCLASSID:
       return Schema.create(Schema.Type.INT);
@@ -332,7 +336,10 @@ public class Token {
       fields.add(new Schema.Field("month", Schema.create(Schema.Type.INT), "", null));
       fields.add(new Schema.Field("day", Schema.create(Schema.Type.INT), "", null));
       fields.add(new Schema.Field("year", Schema.create(Schema.Type.INT), "", null));
-      GenericData.Record gdr = new GenericData.Record(Schema.createRecord(fields));
+      Schema newSchema = Schema.createRecord("date", "", "", false);
+      newSchema.setFields(fields);
+      GenericData.Record gdr = new GenericData.Record(newSchema);
+
       gdr.put("month", month);
       gdr.put("day", day);
       gdr.put("year", year);
@@ -362,7 +369,10 @@ public class Token {
       fields.add(new Schema.Field("hrs", Schema.create(Schema.Type.INT), "", null));
       fields.add(new Schema.Field("mins", Schema.create(Schema.Type.INT), "", null));
       fields.add(new Schema.Field("secs", Schema.create(Schema.Type.INT), "", null));
-      GenericData.Record gdr = new GenericData.Record(Schema.createRecord(fields));
+      Schema newSchema = Schema.createRecord("timestamp", "", "", false);
+      newSchema.setFields(fields);
+      GenericData.Record gdr = new GenericData.Record(newSchema);
+
       gdr.put("hrs", hr);
       gdr.put("mins", min);
       gdr.put("secs", sec);
