@@ -148,7 +148,8 @@ public class SchemaDictionary {
         System.err.println("" + counter + ".  " + entry.getInfo());
         counter++;
       }
+      int numItems = counter-1;
+      System.err.println("Dictionary at " + dictionaryDir.getCanonicalPath() + " has " + numItems + " item(s).");
     }
-
   }
 }
