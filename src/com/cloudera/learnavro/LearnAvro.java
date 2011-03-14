@@ -5,6 +5,7 @@ import java.io.*;
 import java.util.*;
 import org.apache.avro.Schema;
 import org.apache.avro.io.JsonEncoder;
+import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericContainer;
 import org.apache.avro.generic.GenericDatumWriter;
 
@@ -18,6 +19,7 @@ import org.apache.avro.generic.GenericDatumWriter;
  *********************************************************/
 public class LearnAvro {
   static String SCHEMA_FILENAME = "schema.json";
+  static String JSONDATA_FILENAME = "data.avro.json";
   static String DATA_FILENAME = "data.avro";
   static String PARSER_FILENAME = "parser.dat";
 
@@ -26,6 +28,7 @@ public class LearnAvro {
    */
   public RecordFormat inferRecordFormat(File f, File outdir, boolean emitAvro) throws IOException {
     File schemaFile = new File(outdir, SCHEMA_FILENAME);
+    File jsonDataFile = new File(outdir, JSONDATA_FILENAME);
     File dataFile = new File(outdir, DATA_FILENAME);
     File parseTreeFile = new File(outdir, PARSER_FILENAME);
 
@@ -109,9 +112,14 @@ public class LearnAvro {
       int numGoodParses = 0;
       int lineno = 0;
       Schema schema = typeTree.getAvroSchema();
+      GenericDatumWriter jsonGDWriter = new GenericDatumWriter(schema);
+      BufferedOutputStream outJson = new BufferedOutputStream(new FileOutputStream(jsonDataFile));
+      JsonEncoder encoder = new JsonEncoder(schema, outJson);
+
       GenericDatumWriter gdWriter = new GenericDatumWriter(schema);
-      BufferedOutputStream out2 = new BufferedOutputStream(new FileOutputStream(dataFile));
-      JsonEncoder encoder = new JsonEncoder(schema, out2);
+      DataFileWriter outData = new DataFileWriter(gdWriter);
+      outData = outData.create(schema, dataFile);
+
       try {
         in = new BufferedReader(new FileReader(f));
         try {
@@ -122,7 +130,8 @@ public class LearnAvro {
 
             if (gct != null) {
               numGoodParses++;
-              gdWriter.write(gct, encoder);
+              jsonGDWriter.write(gct, encoder);
+              outData.append(gct);
               //System.err.println("Good parse " + numGoodParses);
             } else {
               System.err.println("unparsed line: '" + str + "'");
@@ -135,7 +144,8 @@ public class LearnAvro {
         }
       } finally {
         encoder.flush();
-        out2.close();
+        outJson.close();
+        outData.close();
       }
       System.err.println();
       System.err.println("Total # input lines: " + lineno);
