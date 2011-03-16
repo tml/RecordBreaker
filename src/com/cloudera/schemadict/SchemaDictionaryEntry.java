@@ -39,7 +39,7 @@ public class SchemaDictionaryEntry {
    */
   public SchemaDictionaryEntry(File avroFile, String infoText) throws IOException {
     // Generate schema & summary data from the avro file
-    this.summary = new SchemaStatisticalSummary();
+    this.summary = new SchemaStatisticalSummary("dictionary entry: " + infoText);
     this.schema = summary.createSummaryFromData(avroFile);
     this.info = infoText;
   }

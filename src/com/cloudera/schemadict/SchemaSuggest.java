@@ -51,9 +51,9 @@ public class SchemaSuggest {
    * has the identical format as the input file's Schema object, but the labels may be changed.
    */
   public List<DictionaryMapping> inferSchemaMapping(File avroFile, int k) throws IOException {
-    System.err.println("Observed filename: " + avroFile);
+    System.err.println("Anonymous data filename: " + avroFile);
 
-    SchemaStatisticalSummary srcSummary = new SchemaStatisticalSummary();
+    SchemaStatisticalSummary srcSummary = new SchemaStatisticalSummary("input");
     Schema srcSchema = null;
     try {
       srcSchema = srcSummary.createSummaryFromData(avroFile);
@@ -113,7 +113,7 @@ public class SchemaSuggest {
       System.exit(0);
     }
 
-    int k = 5;
+    int k = 1;
     if (cmd.hasOption("k")) {
       try {
         k = Integer.parseInt(cmd.getOptionValue("k"));
@@ -134,7 +134,7 @@ public class SchemaSuggest {
     List<DictionaryMapping> mappings = ss.inferSchemaMapping(inputData, k);
 
     if (! cmd.hasOption("f")) {
-      System.out.println("Inferred schema mappings:");
+      System.out.println("Ranking of closest known data types, along with match-distance measure (smaller is better):");
       int counter = 1;
       for (DictionaryMapping mapping: mappings) {
         SchemaMapping sm = mapping.getMapping();
@@ -142,9 +142,16 @@ public class SchemaSuggest {
 
         int counterIn = 1;
         System.err.println();
-        System.out.println(counter + ".  Mapping to '" + mapping.getDictEntry().getInfo() + "' has " + bestOps.size() + " ops and distance " + sm.getDist());
+        System.out.println(counter + ".  Mapping input data to '" + mapping.getDictEntry().getInfo() + "' has " + bestOps.size() + " ops and distance " + sm.getDist());
         for (SchemaMappingOp op: bestOps) {
-          System.err.println("\t" + counterIn + ".  " + "op: " + op);
+          //System.err.println("\t" + counterIn + ".  " + "op: " + op);
+          if (op.opcode == SchemaMappingOp.CREATE_OP) {
+            System.err.println("  " + counterIn + ".  " + "In '" + op.getS1DatasetLabel() + "', CREATE " + op.getS1FieldLabel() + " of type " + op.getS1FieldType());
+          } else if (op.opcode == SchemaMappingOp.DELETE_OP) {
+            System.err.println("  " + counterIn + ".  " + "In '" + op.getS1DatasetLabel() + "', DELETE " + op.getS1FieldLabel());
+          } else if (op.opcode == SchemaMappingOp.TRANSFORM_OP) {
+            System.err.println("  " + counterIn + ".  " + "In '" + op.getS1DatasetLabel() + "', TRANSFORM " + op.getS1FieldLabel() + " INTO " + op.getS2FieldLabel());
+          }
           counterIn++;
         }
         counter++;

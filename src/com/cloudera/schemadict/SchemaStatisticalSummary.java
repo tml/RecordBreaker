@@ -26,6 +26,7 @@ import org.apache.avro.generic.GenericRecord;
 
 import org.apache.avro.util.Utf8;
 import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.UTF8;
 import org.apache.hadoop.io.Text;
 
 /********************************************
@@ -213,6 +214,7 @@ public class SchemaStatisticalSummary implements Writable {
     public String dumpSummary(int prefix) {
       return prefixString(prefix) + "numData: " + numData + "\n";
     }
+    public abstract String getTypeDesc();
     /**
      * Find the right node and obtain a description of it.
      */
@@ -225,6 +227,32 @@ public class SchemaStatisticalSummary implements Writable {
           String desc = child.getDesc(nodeid);
           if (desc != null) {
             return desc;
+          }
+        }
+      }
+      return null;
+    }
+    public String getLabel(int nodeid) {
+      if (nodeid == preorderIdx) {
+        return getLabel();
+      } else {
+        for (SummaryNode child: children()) {
+          String label = child.getLabel(nodeid);
+          if (label != null) {
+            return label;
+          }
+        }
+      }
+      return null;
+    }
+    public String getTypeDesc(int nodeid) {
+      if (nodeid == preorderIdx) {
+        return getTypeDesc();
+      } else {
+        for (SummaryNode child: children()) {
+          String typedesc = child.getTypeDesc(nodeid);
+          if (typedesc != null) {
+            return typedesc;
           }
         }
       }
@@ -305,6 +333,9 @@ public class SchemaStatisticalSummary implements Writable {
     public String dumpSummary(int prefix) {
       return prefixString(prefix) + "numData: " + numData + ", avgSize: " + (totalSize / (1.0 * numData)) + "\n" + eltSummary.dumpSummary(prefix+2);
     }
+    public String getTypeDesc() {
+      return "ARRAY";
+    }
     public String getDesc(boolean verbose) {
       String desc = "ARRAY";
       if (verbose) {
@@ -352,6 +383,9 @@ public class SchemaStatisticalSummary implements Writable {
     public String dumpSummary(int prefix) {
       return prefixString(prefix) + "numData: " + numData + ", numTrue: " + numTrue + ", numFalse: " + numFalse + "\n";
     }
+    public String getTypeDesc() {
+      return "BOOLEAN";
+    }
     public String getDesc(boolean verbose) {
       String desc = "BOOLEAN";
       if (verbose) {
@@ -394,6 +428,9 @@ public class SchemaStatisticalSummary implements Writable {
     public String dumpSummary(int prefix) {
       return prefixString(prefix) + "numData: " + numData + ", totalSize: " + totalSize + "\n";
     }
+    public String getTypeDesc() {
+      return "BYTES";
+    }
     public String getDesc(boolean verbose) {
       String desc = "BYTES";
       if (verbose) {
@@ -433,6 +470,9 @@ public class SchemaStatisticalSummary implements Writable {
     /////////////////////////////
     public String dumpSummary(int prefix) {
       return prefixString(prefix) + "numData: " + numData + ", avg: " + (total / (1.0 * numData)) + "\n";
+    }
+    public String getTypeDesc() {
+      return "DOUBLE";
     }
     public String getDesc(boolean verbose) {
       String desc = "DOUBLE";
@@ -485,6 +525,9 @@ public class SchemaStatisticalSummary implements Writable {
         buf.append(prefixString(prefix+2) + symbol + ": " + symbolCounts.get(symbol) + "\n");
       }
       return buf.toString();
+    }
+    public String getTypeDesc() {
+      return "ENUM";
     }
     public String getDesc(boolean verbose) {
       String desc = "ENUM";
@@ -546,6 +589,9 @@ public class SchemaStatisticalSummary implements Writable {
     public String dumpSummary(int prefix) {
       return prefixString(prefix) + "size: " + size + ", total: " + total + ", numData: " + numData;
     }
+    public String getTypeDesc() {
+      return "FIXED";
+    }
     public String getDesc(boolean verbose) {
       String desc = "FIXED";
       if (verbose) {
@@ -588,6 +634,9 @@ public class SchemaStatisticalSummary implements Writable {
     public String dumpSummary(int prefix) {
       return prefixString(prefix) + "numData: " + numData + ", avg: " + (total / (1.0 * numData)) + "\n";
     }
+    public String getTypeDesc() {
+      return "FLOAT";
+    }
     public String getDesc(boolean verbose) {
       String desc = "FLOAT";
       if (verbose) {
@@ -628,6 +677,9 @@ public class SchemaStatisticalSummary implements Writable {
     public String dumpSummary(int prefix) {
       return prefixString(prefix) + "numData: " + numData + ", avg: " + (total / (1.0 * numData)) + "\n";
     }
+    public String getTypeDesc() {
+      return "INT";
+    }
     public String getDesc(boolean verbose) {
       String desc = "INT";
       if (verbose) {
@@ -667,6 +719,9 @@ public class SchemaStatisticalSummary implements Writable {
     /////////////////////////////
     public String dumpSummary(int prefix) {
       return prefixString(prefix) + "numData: " + numData + ", avg: " + (total / (1.0 * numData)) + "\n";
+    }
+    public String getTypeDesc() {
+      return "LONG";
     }
     public String getDesc(boolean verbose) {
       String desc = "LONG";
@@ -730,6 +785,9 @@ public class SchemaStatisticalSummary implements Writable {
       buf.append(prefixString(prefix) + "+------------------------------------------+\n");
       return buf.toString();
     }
+    public String getTypeDesc() {
+      return "MAP";
+    }
     public String getDesc(boolean verbose) {
       String desc = "MAP";
       if (verbose) {
@@ -791,6 +849,9 @@ public class SchemaStatisticalSummary implements Writable {
       }
       return getLabel() + ": " + desc;
     }
+    public String getTypeDesc() {
+      return "NULL";
+    }
 
     /////////////////////////////
     // Serialize/deserialize
@@ -844,6 +905,9 @@ public class SchemaStatisticalSummary implements Writable {
       }
       buf.append(prefixString(prefix) + "+------------------------------------------+\n");
       return buf.toString();
+    }
+    public String getTypeDesc() {
+      return "RECORD";
     }
     public String getDesc(boolean verbose) {
       String desc = "RECORD";
@@ -917,6 +981,9 @@ public class SchemaStatisticalSummary implements Writable {
     /////////////////////////////
     public String dumpSummary(int prefix) {
       return prefixString(prefix) + "numData: " + numData + ", avg-len: " + (totalLength / (1.0 * numData)) + "\n";
+    }
+    public String getTypeDesc() {
+      return "STRING";
     }
     public String getDesc(boolean verbose) {
       String desc = "STRING";
@@ -1007,6 +1074,9 @@ public class SchemaStatisticalSummary implements Writable {
       }
       return buf.toString();
     }
+    public String getTypeDesc() {
+      return "UNION";
+    }
     public String getDesc(boolean verbose) {
       String desc = "UNION";
       if (verbose) {
@@ -1073,11 +1143,15 @@ public class SchemaStatisticalSummary implements Writable {
   // Members
   /////////////////////////////////////////////////
   SummaryNode root = null;
+  String datasetLabel = "";
 
   /////////////////////////////////////////////////
   // Constructors, initializers
   /////////////////////////////////////////////////
   public SchemaStatisticalSummary() throws IOException {
+  }
+  public SchemaStatisticalSummary(String datasetLabel) throws IOException {
+    this.datasetLabel = datasetLabel;
   }
 
   /**
@@ -1298,7 +1372,7 @@ public class SchemaStatisticalSummary implements Writable {
                   storeValue(E, sIdx, uIdx, iIdx, tIdx, vIdx, jIdx, 
                              iNode.transformCost(jNode));
 
-                  System.err.println("TXCOST: " + iNode.transformCost(jNode));
+                  //System.err.println("TXCOST: " + iNode.transformCost(jNode));
 
                   // The choice is TRANSFORM-I-J
                   storeChoice(Echoice, sIdx, uIdx, iIdx, tIdx, vIdx, jIdx,
@@ -1338,10 +1412,10 @@ public class SchemaStatisticalSummary implements Writable {
                       tIdx == 1 &&
                       vIdx == 1 &&
                       jIdx == 8) {
-                    System.err.println("Option 1: " + option1);
-                    System.err.println("Option 2: " + option2);
-                    System.err.println("Option 3: " + option3);
-                    System.err.println("xIdx: " + xIdx + ", " + "yIdx: " + yIdx);
+                    //System.err.println("Option 1: " + option1);
+                    //System.err.println("Option 2: " + option2);
+                    //System.err.println("Option 3: " + option3);
+                    //System.err.println("xIdx: " + xIdx + ", " + "yIdx: " + yIdx);
                   }
 
                   if (option1 == min) {
@@ -1420,9 +1494,9 @@ public class SchemaStatisticalSummary implements Writable {
             // The current possible choice is OPS-FROM-MIN(S, T) PLUS OPS-FROM-E(s, i-1, t, j-1)
           }
         }
-        System.err.print("Transform cost: " + iNode.transformCost(jNode) + " for " + iIdx + ", " + jIdx + ", with pre-tx cost " + minM[iIdx][jIdx]);
+        //System.err.print("Transform cost: " + iNode.transformCost(jNode) + " for " + iIdx + ", " + jIdx + ", with pre-tx cost " + minM[iIdx][jIdx]);
         minM[iIdx][jIdx] = minM[iIdx][jIdx] + iNode.transformCost(jNode);
-        System.err.println("... post of " + minM[iIdx][jIdx]);
+        //System.err.println("... post of " + minM[iIdx][jIdx]);
 
         // The choice is TRANSFORM-I-J PLUS ops from previous step
         for (SchemaMappingOp op: curBestOps) {
@@ -1520,9 +1594,9 @@ public class SchemaStatisticalSummary implements Writable {
     while (maybeHasPrev) {
       maybeHasPrev = false;
       List<SchemaMappingOp> newOps = new ArrayList<SchemaMappingOp>();
-      System.err.println("ROUND " + counter);
+      //System.err.println("ROUND " + counter);
       for (SchemaMappingOp op: bestOps) {
-        System.err.println("OP: " + op);
+        //System.err.println("OP: " + op);
         if (op instanceof PreviousChoice) {
           newOps.addAll(((PreviousChoice) op).getOps());
           maybeHasPrev = true;
@@ -1532,7 +1606,7 @@ public class SchemaStatisticalSummary implements Writable {
       }
       bestOps = newOps;
       counter++;
-      System.err.println();
+      //System.err.println();
     }
 
     // Distance of best mapping is stored in D[max-i][max-j].
@@ -1570,11 +1644,20 @@ public class SchemaStatisticalSummary implements Writable {
   ////////////////////////////////////////////////
   // String representation of the overall summary object
   ////////////////////////////////////////////////
+  public String getDatasetLabel() {
+    return datasetLabel;
+  }
   public String dumpSummary() {
     return this.root.dumpSummary(0);
   }
   public String getDesc(int nodeid) {
     return root.getDesc(nodeid);
+  }
+  public String getLabel(int nodeid) {
+    return root.getLabel(nodeid);
+  }
+  public String getTypeDesc(int nodeid) {
+    return root.getTypeDesc(nodeid);
   }
 
   ////////////////////////////////////////////////
@@ -1584,6 +1667,7 @@ public class SchemaStatisticalSummary implements Writable {
     out.write(MAGIC);
     out.write(VERSION);
     root.write(out);
+    UTF8.writeString(out, datasetLabel);
   }
 
   public void readFields(DataInput in) throws IOException {
@@ -1591,5 +1675,6 @@ public class SchemaStatisticalSummary implements Writable {
     byte version = in.readByte();
     this.root = readAndCreate(in);
     this.root.computePreorder(0);
+    this.datasetLabel = UTF8.readString(in);
   }
 }

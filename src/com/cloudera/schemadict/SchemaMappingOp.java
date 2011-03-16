@@ -33,6 +33,24 @@ public class SchemaMappingOp {
     this.s2 = s2;
     this.nodeid2 = nodeid2;
   }
+  public String getS1DatasetLabel() {
+    return s1.getDatasetLabel();
+  }
+  public String getS1FieldLabel() {
+    return s1.getLabel(nodeid1);
+  }
+  public String getS1FieldType() {
+    return s1.getTypeDesc(nodeid1);
+  }
+  public String getS2DatasetLabel() {
+    return s2.getDatasetLabel();
+  }
+  public String getS2FieldLabel() {
+    return s2.getLabel(nodeid2);
+  }
+  public String getS2FieldType() {
+    return s2.getTypeDesc(nodeid2);
+  }
   public String toString() {
     if (opcode == CREATE_OP) {
       return "CREATE " + nodeid1 + "(" + s1.getDesc(nodeid1) + ")";

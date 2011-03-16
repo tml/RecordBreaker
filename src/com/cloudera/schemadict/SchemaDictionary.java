@@ -146,6 +146,8 @@ public class SchemaDictionary {
       int counter = 1;
       for (SchemaDictionaryEntry entry: dict.contents()) {
         System.err.println("" + counter + ".  " + entry.getInfo());
+        System.err.println(entry.getSchema());
+        System.err.println();
         counter++;
       }
       int numItems = counter-1;
