@@ -1,0 +1,34 @@
+{
+  "type" : "record",
+  "name" : "record-1",
+  "namespace" : "",
+  "fields" : [ {
+    "name" : "firstname",
+    "type" : "string"
+  }, {
+    "name" : "lastname",
+    "type" : "string"
+  }, {
+    "name" : "salary",
+    "type" : "double"
+  }, {
+    "name" : "start-date",
+    "type" : {
+      "type" : "record",
+      "name" : "start-date",
+      "fields" : [ {
+        "name" : "month",
+        "type" : "int"
+      }, {
+        "name" : "day",
+        "type" : "int"
+      }, {
+        "name" : "year",
+        "type" : "int"
+      } ]
+    }
+  }, {
+    "name" : "numreports",
+    "type" : "int"
+  } ]
+}

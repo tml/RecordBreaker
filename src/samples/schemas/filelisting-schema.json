@@ -1,0 +1,44 @@
+{
+  "type" : "record",
+  "name" : "record-1",
+  "namespace" : "",
+  "fields" : [ {
+    "name" : "datemodified",
+    "type" : {
+      "type" : "record",
+      "name" : "datemodified",
+      "fields" : [ {
+        "name" : "month",
+        "type" : "int"
+      }, {
+        "name" : "day",
+        "type" : "int"
+      }, {
+        "name" : "year",
+        "type" : "int"
+      } ]
+    }
+  }, {
+    "name" : "timemodified",
+    "type" : {
+      "type" : "record",
+      "name" : "timemodified",
+      "fields" : [ {
+        "name" : "hrs",
+        "type" : "int"
+      }, {
+        "name" : "mins",
+        "type" : "int"
+      }, {
+        "name" : "secs",
+        "type" : "int"
+      } ]
+    }
+  }, {
+    "name" : "url",
+    "type" : "string"
+  }, {
+    "name" : "len",
+    "type" : "int"
+  } ]
+}

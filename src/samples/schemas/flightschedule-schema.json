@@ -1,0 +1,79 @@
+{
+  "type" : "record",
+  "name" : "record-1",
+  "namespace" : "",
+  "fields" : [ {
+    "name" : "departure-city",
+    "type" : "string"
+  }, {
+    "name" : "destination-city",
+    "type" : "string"
+  }, {
+    "name" : "airline",
+    "type" : "string"
+  }, {
+    "name" : "departure-date",
+    "type" : {
+      "type" : "record",
+      "name" : "departure-date",
+      "fields" : [ {
+        "name" : "month",
+        "type" : "int"
+      }, {
+        "name" : "day",
+        "type" : "int"
+      }, {
+        "name" : "year",
+        "type" : "int"
+      } ]
+    }
+  }, {
+    "name" : "departure-time",
+    "type" : {
+      "type" : "record",
+      "name" : "timestamp",
+      "fields" : [ {
+        "name" : "hrs",
+        "type" : "int"
+      }, {
+        "name" : "mins",
+        "type" : "int"
+      }, {
+        "name" : "secs",
+        "type" : "int"
+      } ]
+    }
+  }, {
+    "name" : "return-date",
+    "type" : {
+      "type" : "record",
+      "name" : "return-date",
+      "fields" : [ {
+        "name" : "month",
+        "type" : "int"
+      }, {
+        "name" : "day",
+        "type" : "int"
+      }, {
+        "name" : "year",
+        "type" : "int"
+      } ]
+    }
+  }, {
+    "name" : "return-time",
+    "type" : {
+      "type" : "record",
+      "name" : "timestamp",
+      "fields" : [ {
+        "name" : "hrs",
+        "type" : "int"
+      }, {
+        "name" : "mins",
+        "type" : "int"
+      }, {
+        "name" : "secs",
+        "type" : "int"
+      } ]
+    }
+  } ]
+}
