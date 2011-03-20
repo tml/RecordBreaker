@@ -134,26 +134,71 @@ public class SchemaSuggest {
     List<DictionaryMapping> mappings = ss.inferSchemaMapping(inputData, k);
 
     if (! cmd.hasOption("f")) {
-      System.out.println("Ranking of closest known data types, along with match-distance measure (smaller is better):");
+      System.out.println("Ranking of closest known data types, with match-distance (smaller is better):");
       int counter = 1;
       for (DictionaryMapping mapping: mappings) {
         SchemaMapping sm = mapping.getMapping();
         List<SchemaMappingOp> bestOps = sm.getMapping();
 
-        int counterIn = 1;
         System.err.println();
-        System.out.println(counter + ".  Mapping input data to '" + mapping.getDictEntry().getInfo() + "' has " + bestOps.size() + " ops and distance " + sm.getDist());
+        System.err.println();
+        System.err.println("-------------------------------------------------------------");
+        System.out.println(counter + ".  '" + mapping.getDictEntry().getInfo() + "', with distance: " + sm.getDist());
+
+        List<SchemaMappingOp> renames = new ArrayList<SchemaMappingOp>();
+        List<SchemaMappingOp> extraInTarget = new ArrayList<SchemaMappingOp>();
+        List<SchemaMappingOp> extraInSource = new ArrayList<SchemaMappingOp>();
+
         for (SchemaMappingOp op: bestOps) {
-          //System.err.println("\t" + counterIn + ".  " + "op: " + op);
           if (op.opcode == SchemaMappingOp.CREATE_OP) {
-            System.err.println("  " + counterIn + ".  " + "In '" + op.getS1DatasetLabel() + "', CREATE " + op.getS1FieldLabel() + " of type " + op.getS1FieldType());
+            extraInTarget.add(op);
           } else if (op.opcode == SchemaMappingOp.DELETE_OP) {
-            System.err.println("  " + counterIn + ".  " + "In '" + op.getS1DatasetLabel() + "', DELETE " + op.getS1FieldLabel());
+            if (op.getS1DatasetLabel().compareTo("input") == 0) {
+              extraInSource.add(op);
+            } else {
+              extraInTarget.add(op);
+            }
           } else if (op.opcode == SchemaMappingOp.TRANSFORM_OP) {
-            System.err.println("  " + counterIn + ".  " + "In '" + op.getS1DatasetLabel() + "', TRANSFORM " + op.getS1FieldLabel() + " INTO " + op.getS2FieldLabel());
+            renames.add(op);
           }
-          counterIn++;
         }
+
+        System.err.println();
+        System.err.println(" DISCOVERED LABELS");
+        int counterIn = 1;
+        if (renames.size() == 0) {
+          System.err.println("  (None)");
+        } else {
+          for (SchemaMappingOp op: renames) {
+            System.err.println("  " + counterIn + ".  " + "In '" + op.getS1DatasetLabel() + "', LABEL " + op.getS1FieldLabel() + " AS " + op.getS2FieldLabel());
+            counterIn++;
+          }
+        }
+
+        System.err.println();
+        System.err.println(" UNMATCHED ITEMS IN TARGET DATA TYPE");
+        counterIn = 1;
+        if (extraInTarget.size() == 0) {
+          System.err.println("  (None)");
+        } else {
+          for (SchemaMappingOp op: extraInTarget) {
+            System.err.println("  " + counterIn + ".  " + op.getS1FieldLabel());
+            counterIn++;
+          }
+        }
+
+        System.err.println();
+        System.err.println(" UNMATCHED ITEMS IN SOURCE DATA");
+        counterIn = 1;
+        if (extraInSource.size() == 0) {
+          System.err.println("  (None)");
+        } else {
+          for (SchemaMappingOp op: extraInSource) {
+            System.err.println("  " + counterIn + ".  " + op.getS1FieldLabel());
+            counterIn++;
+          }
+        }
+
         counter++;
       }
     }
