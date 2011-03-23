@@ -92,7 +92,7 @@ public class Token {
       return null;
     }
     }
-    public static Schema createAvroSchema(int tokenClassIdentifier, String tokenParameter) {
+    public static Schema createAvroSchema(int tokenClassIdentifier, String tokenParameter, String fieldName) {
     switch (tokenClassIdentifier) {
     case META_TOKENCLASSID:
       return null;
@@ -103,7 +103,7 @@ public class Token {
     case PERMISSIONS_TOKENCLASSID:
       return Schema.create(Schema.Type.STRING);
     case DATE_TOKENCLASSID: {
-      Schema s = Schema.createRecord("date", "", "", false);
+      Schema s = Schema.createRecord(fieldName, "", "", false);
       List<Schema.Field> fields = new ArrayList<Schema.Field>();
       fields.add(new Schema.Field("month", Schema.create(Schema.Type.INT), "", null));
       fields.add(new Schema.Field("day", Schema.create(Schema.Type.INT), "", null));
@@ -112,7 +112,7 @@ public class Token {
       return s;
     }
     case TIME_TOKENCLASSID: {
-      Schema s = Schema.createRecord("timestamp", "", "", false);
+      Schema s = Schema.createRecord(fieldName, "", "", false);
       List<Schema.Field> fields = new ArrayList<Schema.Field>();
       fields.add(new Schema.Field("hrs", Schema.create(Schema.Type.INT), "", null));
       fields.add(new Schema.Field("mins", Schema.create(Schema.Type.INT), "", null));

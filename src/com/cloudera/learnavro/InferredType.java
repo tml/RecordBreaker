@@ -196,7 +196,7 @@ class BaseType extends InferredType {
   }
 
   Schema computeAvroSchema() {
-    return Token.AbstractToken.createAvroSchema(tokenClassIdentifier, tokenParameter);
+    return Token.AbstractToken.createAvroSchema(tokenClassIdentifier, tokenParameter, name);
   }
   public Schema getAvroSchema() {
     return schema;
