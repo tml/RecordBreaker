@@ -31,7 +31,7 @@
     "name" : "departure-time",
     "type" : {
       "type" : "record",
-      "name" : "timestamp",
+      "name" : "departure-time",
       "fields" : [ {
         "name" : "hrs",
         "type" : "int"
@@ -63,7 +63,7 @@
     "name" : "return-time",
     "type" : {
       "type" : "record",
-      "name" : "timestamp",
+      "name" : "return-time",
       "fields" : [ {
         "name" : "hrs",
         "type" : "int"
