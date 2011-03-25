@@ -265,7 +265,11 @@ public class SchemaStatisticalSummary implements Writable {
      * dotted label sequence all the way.
      */
     public String getLabel() {
-      return getLabel("", this);
+      if (parent != null) {
+        return parent.getLabel("", this);
+      } else {
+        return "<root>";
+      }
     }
 
     public String getLabel(String labelSoFar, SummaryNode src) {
@@ -916,6 +920,7 @@ public class SchemaStatisticalSummary implements Writable {
       }
       return getLabel() + ": " + desc;
     }
+    /**
     public String getLabel() {
       if (parent != null) {
         return parent.getLabel("", this);
@@ -923,6 +928,7 @@ public class SchemaStatisticalSummary implements Writable {
         return "<root>";
       }
     }
+    **/
     public String getLabel(String labelSoFar, SummaryNode src) {
       for (String fname: recordSummary.keySet()) {
         SummaryNode candidate = recordSummary.get(fname);
@@ -936,7 +942,7 @@ public class SchemaStatisticalSummary implements Writable {
           }
         }
       }
-      return "<anonymous>" + "." + labelSoFar;
+      return "<root>" + "." + labelSoFar;
     }
 
     /////////////////////////////
