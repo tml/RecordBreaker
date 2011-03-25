@@ -170,7 +170,7 @@ public class SchemaSuggest {
           System.err.println("  (None)");
         } else {
           for (SchemaMappingOp op: renames) {
-            System.err.println("  " + counterIn + ".  " + "In '" + op.getS1DatasetLabel() + "', LABEL " + op.getS1FieldLabel() + " AS " + op.getS2FieldLabel());
+            System.err.println("  " + counterIn + ".  " + "In '" + op.getS1DatasetLabel() + "', label '" + op.getS1FieldLabel() + "' AS " + op.getS2FieldLabel());
             counterIn++;
           }
         }
