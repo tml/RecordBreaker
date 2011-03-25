@@ -46,7 +46,7 @@
     </div>
 
     <h1><a href="http://github.com/cloudera/LearnAvro">LearnAvro</a>
-      <span class="small">by Michael Cafarella (University of Michigan), <a href="http://github.com/cloudera">Cloudera</a></span></h1>
+</h1>
 
     <div class="description">
       LearnAvro: Automatic structure for your HDFS data.
@@ -76,16 +76,16 @@ The LearnAvro project aims to <i>automatically generate structure</i> for text-e
     </p>
 
 <h2>Related Work</h2>
-  Our work on the LearnAvro component draws inspiration from the PADS research project (<a href="">http://www.padsproj.org/index.html</a>), in particular this <a href="http://www.padsproj.org/papers/popl08.pdf">2008 POPL paper</a> by Fisher, Walker, Zhu, and White (which itself draws on many papers in the area of information extraction and related fields).  The authors have released code for their system, written in ML.  ML is a great language, but not one that traditionally draws a large open-source community.<p>
+  Our work on the LearnAvro component draws inspiration from the PADS research project (<a href="">http://www.padsproj.org/index.html</a>), in particular the paper <a href="http://www.padsproj.org/papers/popl08.pdf">From Dirt to Shovels: Fully Automatic Tool Generation from Ad Hoc Data, by Fisher, Walker, Zhu, and White.  Published in POPL, 2008.</a>.  That paper itself draws on many papers in the area of information extraction and related fields.  The authors have released code for their system, written in ML.  ML is a great language, but is not well-suited to our needs: it is not supported by Avro, and is unlikely to appeal to many of the developers currently involved with the Hadoop ecosystem.<p>
 
-  SchemaDictionary is more generally inspired by database schema mapping systems.  (<a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.20.1842&rep=rep1&type=pdf">Clio</a> from Miller, et al., is a famous example.)  Schema mapping systems are usually designed to help database administrators merge existing databases; for example, when company A purchases company B and must then merge the employee lists.  These tools are often expensive and expect a lot of administrator attention.  In contrast, our SchemaDictionary is for busy data analysts who simply want to check out a novel dataset as quickly as possible.  It is fast and simple, but can only handle relatively simple structures (rendering it inappropriate for databases, but on target for the kind of data that is popular in text-based formats).<p>
+  SchemaDictionary is more generally inspired by database schema mapping systems.  (A famous example is described in <a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.20.1842&rep=rep1&type=pdf">The Clio Project: Managing Heterogeneity, by Miller, Hernandez, Haas, Yan, Ho, Fagin, and Popa, published in SIGMOD Record 30(1), March 2001, pp.78-83</a>.)  Schema mapping systems are usually designed to help database administrators merge existing databases; for example, when company A purchases company B and must then merge the employee lists.  These tools are often expensive and expect a lot of administrator attention.  In contrast, our SchemaDictionary is for busy data analysts who simply want to check out a novel dataset as quickly as possible.  It is fast and simple, but can only handle relatively simple structures (rendering it inappropriate for databases, but on target for the kind of data that is popular in text-based formats).<p>
 
 <h2>Walkthrough</h2>
-Imagine you have a very simple log of accesses to your site, stored in <tt>accesses.txt</tt>:<p>
+Imagine you have a simple file listing, stored in <tt>listing.txt</tt>:<p>
 <tt>
-February 15, 2011 10:20:10 http://domain.com/post1.html 2192<br>
-February 16, 2011 11:34:42 http://domain.com/post2.html 3074<br>
-February 16, 2011 22:17:09 http://domain.com/post2.html 3074<br>
+drwxr-xr-x   5 mjc  staff    170 Mar 14 14:14 bin<br>
+drwxr-xr-x   5 mjc  staff    170 Mar 12 05:13 build<br>
+-rw-r--r--   1 mjc  staff  11080 Mar 14 14:14 build.xml<br>
 </tt>
 <p>
 
@@ -94,10 +94,10 @@ We can now run our tools to automatically turn this text file into a structured 
 <h3>LearnAvro</h3>
 We run the first component, LearnAvro, as follows:<p>
 <tt>
-$ bin/learnavro learn accesses.txt outdir
+$ bin/learnavro learn listing.txt outdir
 </tt><p>
 
-This tells the learnavro tool to learn the Avro structure found in <tt>accesses.txt</tt>, and to write it out to the <tt>outdir</tt> directory.  <tt>outdir</tt> contains three files: <tt>schema.json</tt>, <tt>data.avro</tt>, and <tt>parser.dat</tt>.<p>
+This tells the learnavro tool to learn the Avro structure found in <tt>listing.txt</tt>, and to write it out to the <tt>outdir</tt> directory.  <tt>outdir</tt> contains four files: <tt>schema.json</tt>, <tt>data.avro.json</tt>, <tt>data.avro</tt>, and <tt>parser.dat</tt>.<p>
 
 The most interesting is probably <tt>schema.json</tt>, the program's attempt at building a JSON schema that describes the text data.  In the case of the example above, it looks like this:<p>
 <code>
@@ -107,23 +107,40 @@ The most interesting is probably <tt>schema.json</tt>, the program's attempt at 
 &nbsp;  "namespace" : "",<br>
 &nbsp;  "fields" : [ {<br>
 &nbsp;&nbsp;    "name" : "base-0",<br>
+&nbsp;&nbsp;    "type" : "string"<br>
+&nbsp;  }, {<br>
+&nbsp;&nbsp;    "name" : "base-2",<br>
+&nbsp;&nbsp;    "type" : "int"<br>
+&nbsp;  }, {<br>
+&nbsp;&nbsp;    "name" : "base-4",<br>
+&nbsp;&nbsp;    "type" : "string"<br>
+&nbsp;  }, {<br>
+&nbsp;&nbsp;    "name" : "base-6",<br>
+&nbsp;&nbsp;    "type" : "string"<br>
+&nbsp;  }, {<br>
+&nbsp;&nbsp;    "name" : "base-8",<br>
+&nbsp;&nbsp;    "type" : "int"<br>
+&nbsp;  }, {<br>
+&nbsp;&nbsp;    "name" : "base-10",<br>
 &nbsp;&nbsp;    "type" : {<br>
 &nbsp;&nbsp;&nbsp;      "type" : "record",<br>
+&nbsp;&nbsp;&nbsp;      "name" : "base-10",<br>
 &nbsp;&nbsp;&nbsp;      "fields" : [ {<br>
 &nbsp;&nbsp;&nbsp;&nbsp;        "name" : "month",<br>
 &nbsp;&nbsp;&nbsp;&nbsp;        "type" : "int"<br>
 &nbsp;&nbsp;&nbsp;      }, {<br>
-&nbsp;&nbsp;&nbsp;&nbsp;      "name" : "day",<br>
+&nbsp;&nbsp;&nbsp;&nbsp;        "name" : "day",<br>
 &nbsp;&nbsp;&nbsp;&nbsp;        "type" : "int"<br>
 &nbsp;&nbsp;&nbsp;      }, {<br>
 &nbsp;&nbsp;&nbsp;&nbsp;        "name" : "year",<br>
 &nbsp;&nbsp;&nbsp;&nbsp;        "type" : "int"<br>
 &nbsp;&nbsp;&nbsp;      } ]<br>
-&nbsp;    }<br>
+&nbsp;&nbsp;    }<br>
 &nbsp;  }, {<br>
-&nbsp;&nbsp;    "name" : "base-2",<br>
+&nbsp;&nbsp;    "name" : "base-12",<br>
 &nbsp;&nbsp;    "type" : {<br>
 &nbsp;&nbsp;&nbsp;      "type" : "record",<br>
+&nbsp;&nbsp;&nbsp;      "name" : "base-12",<br>
 &nbsp;&nbsp;&nbsp;      "fields" : [ {<br>
 &nbsp;&nbsp;&nbsp;&nbsp;        "name" : "hrs",<br>
 &nbsp;&nbsp;&nbsp;&nbsp;        "type" : "int"<br>
@@ -134,63 +151,168 @@ The most interesting is probably <tt>schema.json</tt>, the program's attempt at 
 &nbsp;&nbsp;&nbsp;&nbsp;        "name" : "secs",<br>
 &nbsp;&nbsp;&nbsp;&nbsp;        "type" : "int"<br>
 &nbsp;&nbsp;&nbsp;      } ]<br>
-&nbsp;    }<br>
+&nbsp;&nbsp;    }<br>
 &nbsp;  }, {<br>
-&nbsp;&nbsp;    "name" : "base-4",<br>
+&nbsp;&nbsp;    "name" : "base-14",<br>
 &nbsp;&nbsp;    "type" : "string"<br>
-&nbsp;  }, {<br>
-&nbsp;&nbsp;    "name" : "base-6",<br>
-&nbsp;&nbsp;    "type" : "int"<br>
 &nbsp;  } ]<br>
 }<br>
 </code>
 
-The JSON starts by describing two records, each consisting of three integers.  The first record has fields <tt>month</tt>, <tt>day</tt>, and <tt>year</tt> and clearly describes the date that starts every line in <tt>accesses.txt</tt>.  The second record represents a timestamp, with fields <tt>hrs</tt>, <tt>mins</tt>, and <tt>secs</tt>.  Following these two records are a string and an integer, matching the URL and file size from the raw input file.<p>
+The JSON schema describes a record of several fields: a string, an int, two strings, an int, a date, a time, and a final string.  These correspond to the permission string (string), the number of links (int), the user owner (string), the group owner (string), the filesize (int), the modification stamp (date and time), and finally the filename (string).<p>
 
-All four of the top-level data values -- the date record, the timestamp record, the URL string, and the file size integer -- have nondescriptive synthetically-generated names that begin with <tt>base-</tt>.  The LearnAvro step discerns the type of each field, but not its role.  Obtaining names for these fields is the job of the SchemaDictionary.  For now, we just live with the synthetic names.<p>
+Of course, the field names here are nonsense.  All of the values, except for subfields of the date and timestamp records, have nondescriptive synthetically-generated names.  The LearnAvro step attempts to recover the type of each field, but has no way to know its name or role.  Obtaining names for these fields is the job of the SchemaDictionary.  For now, we just live with these bad synthetic names.<p>
 
-Next, let's look at <tt>data.avro</tt>, the actual Avro data.  We currently use a textual version of Avro data for clarity and debugging reasons, but we could switch to binary quite easily.  The contents of <tt>data.avro</tt> look like this:<p>
+Next, let's look at <tt>data.avro.json</tt>, a JSON-formatted version of the actual data.  The binary Avro version of this data is stored in <tt>data.avro</tt>.  The contents of <tt>data.avro.json</tt> look like this (I've added line breaks to make it more readable):<p>
 <tt>
-{"base-0":{"month":-1,"day":15,"year":2011},"base-2":{"hrs":10,"mins":30,"secs":12},"base-4":"http://domain.com/post1.html","base-6":2034} {"base-0":{"month":-1,"day":16,"year":2011},"base-2":{"hrs":9,"mins":42,"secs":57},"base-4":"http://domain.com/post2.html","base-6":3147} {"base-0":{"month":-1,"day":16,"year":2011},"base-2":{"hrs":22,"mins":12,"secs":54},"base-4":"http://domain.com/post2.html","base-6":3147}
+{"base-0":"drwxr-xr-x","base-2":5,"base-4":"mjc","base-6":"staff","base-8":170,"base-10":{"month":3,"day":14,"year":-1},"base-12":{"hrs":14,"mins":14,"secs":0},"base-14":"bin"}<br>
+{"base-0":"drwxr-xr-x","base-2":5,"base-4":"mjc","base-6":"staff","base-8":170,"base-10":{"month":3,"day":12,"year":-1},"base-12":{"hrs":5,"mins":13,"secs":0},"base-14":"build"}<br>
+{"base-0":"-rw-r--r--","base-2":1,"base-4":"mjc","base-6":"staff","base-8":11080,"base-10":{"month":3,"day":14,"year":-1},"base-12":{"hrs":14,"mins":14,"secs":0},"base-14":"build.xml"}
 </tt>
 <p>
 
-The field names here reflect the contents of <tt>schema.json</tt>, and the values of those fields reflect the contents of <tt>accesses.txt</tt>.<p>
+The field names here match the contents of <tt>schema.json</tt>, and the values of those fields reflect the contents of <tt>listing.txt</tt>.<p>
 
-The final LearnAvro output file is <tt>parser.dat</tt>.  This is a binary representation of the parser generated by LearnAvro; the program applied this parser to <tt>accesses.txt</tt> in order to obtain <tt>data.avro</tt>.  If the user wants to process more data that has the same format as <tt>accesses.txt</tt>, there's no need to relearn the structure; she can simply reapply the already-learned parser.<p>
+The final LearnAvro output file is <tt>parser.dat</tt>.  This is a binary representation of the parser generated by LearnAvro; the program applied this parser to <tt>listing.txt</tt> in order to obtain <tt>data.avro</tt> and <tt>data.avro.json</tt>.  If the user wants to process more data that has the same format as <tt>listing.txt</tt>, there's no need to relearn the structure; she can simply reapply the already-learned parser in <tt>parser.dat</tt>.<p>
 
 We're now ready to apply the SchemaDictionary component.<p>
 
 <h3>SchemaDictionary</h3>
 
-Most of the time, we could now use the SchemaDictionary tool to compare the structured but anonymous <tt>data.avro</tt> and <tt>schema.json</tt> against a large number of known data types.  The tool finds the closest match and uses that match to generate labels for the anonymous fields in our new Avro file.<p>
+We now use the SchemaDictionary tool to find meaningful names for all the fields in data obtained by LearnAvro.  SchemaDictionary compares the structured but anonymous <tt>data.avro</tt> and <tt>schema.json</tt> against a large dictionary of known data types.  The SchemaDictionary tool then finds the closest match between the anonymous data and a dictionary entry, and uses that match to choose meaningful labels for the anonymous Avro fields.<p>
 
-Unfortunately, we don't yet have any known data types.  Before we can compare LearnAvro's output to anything, we need to assemble a small set of known types.  Typing in the following commands:<p>
+As long as the dictionary contains a dataset that is similar to the anonymous candidate data, then SchemaDictionary should be able to find a reasonable match.  We hope the number of data types tracked by SchemaDictionary quickly becomes large and diverse, allowing it to find labels for almost any text-embedded dataset that LearnAvro is likely to encounter.  A small number of data types are currently in the SchemaDictionary repository.<p>
 
-<tt>bin/schemadict dict -m "Simple web access log" -a src/samples/schemas/web-data2.avro schemaDict</tt><br>
-<tt>bin/schemadict dict -m "Local bus schedule" -a src/samples/schemas/bus-schedule.avro schemaDict</tt><p>
+Our first step is to add the data type samples from the repository into a "live" SchemaDictionary instance.  We can build a dictionary that contains these samples by typing in the following commands:<p>
 
-will create a new dictionary called <tt>schemaDict</tt>.  We will add to it two known data samples stored in <tt>src/samples/schemas</tt>, supplying a small comment to describe each one.  We can then display the contents of <tt>schemaDict</tt> with this command:<p>
+<tt>bin/schemadict dict -m "Human resources database format" -a src/samples/schemas/hr.avro schemaDict</tt><br>
+<tt>bin/schemadict dict -m "Web server log format" -a src/samples/schemas/weblisting.avro schemaDict</tt><p>
+<tt>bin/schemadict dict -m "Airline schedule" -a src/samples/schemas/flightschedule.avro schemaDict</tt><p>
+
+Executing these commands will create a new directory called <tt>schemaDict</tt>.  We will add to it three known data samples stored in <tt>src/samples/schemas</tt>, and supply a small comment to describe each one.  By dumping the contents of <tt>schemaDict</tt> to the screen with this command:<p>
 
 <tt>bin/schemadict dict -d schemaDict</tt><p>
 
-which should confirm that <tt>schemaDict</tt> contains the two data types seen above.  We're now ready to apply labels to our original file from LearnAvro.  Entering this command:<p>
+we can obtain the following listing:<p>
 
-<tt>bin/schemadict learn schemaDict outdir</tt><p>
+<code>
+1.  Web server log format<br>
+{"type":"record","name":"record-1","namespace":"","fields":[{"name":"datemodified","type":{"type":"record","name":"datemodified","fields":[{"name":"month","type":"int"},{"name":"day","type":"int"},{"name":"year","type":"int"}]}},{"name":"timemodified","type":{"type":"record","name":"timemodified","fields":[{"name":"hrs","type":"int"},{"name":"mins","type":"int"},{"name":"secs","type":"int"}]}},{"name":"url","type":"string"},{"name":"len","type":"int"}]}<br>
+<br>
+2.  Human resources database format<br>
+{"type":"record","name":"record-1","namespace":"","fields":[{"name":"firstname","type":"string"},{"name":"lastname","type":"string"},{"name":"salary","type":"double"},{"name":"start-date","type":{"type":"record","name":"start-date","fields":[{"name":"month","type":"int"},{"name":"day","type":"int"},{"name":"year","type":"int"}]}},{"name":"numreports","type":"int"}]}<br>
+<br>
+3.  Airline schedule<br>
+{"type":"record","name":"record-1","namespace":"","fields":[{"name":"departure-city","type":"string"},{"name":"destination-city","type":"string"},{"name":"airline","type":"string"},{"name":"departure-date","type":{"type":"record","name":"departure-date","fields":[{"name":"month","type":"int"},{"name":"day","type":"int"},{"name":"year","type":"int"}]}},{"name":"departure-time","type":{"type":"record","name":"departure-time","fields":[{"name":"hrs","type":"int"},{"name":"mins","type":"int"},{"name":"secs","type":"int"}]}},{"name":"return-date","type":{"type":"record","name":"return-date","fields":[{"name":"month","type":"int"},{"name":"day","type":"int"},{"name":"year","type":"int"}]}},{"name":"return-time","type":{"type":"record","name":"return-time","fields":[{"name":"hrs","type":"int"},{"name":"mins","type":"int"},{"name":"secs","type":"int"}]}}]}<br>
+<br>
+Dictionary at schemaDict has 3 item(s).<br>
+</code><p>
 
-will ask the SchemaDictionary tool to learn a labelset for <tt>schemaDict</tt>, using the known datatypes in <tt>outdir</tt>.  It outputs the following:<p>
 
+This listing should confirm that <tt>schemaDict</tt> contains the three data types seen above.<p>
+
+<hr>
+We're now ready to use this dictionary to apply labels to our original file from LearnAvro.  Entering this command:<p>
+
+<tt>bin/schemadict suggest schemaDict outdir/data.avro</tt><p>
+
+will ask the SchemaDictionary tool to find some labels for the anonymous data in <tt>outdir/data.avro</tt> by comparing it to all the known data types in <tt>schemaDict</tt>.  Running this program will output the following:<p>
+<code>
+Anonymous data filename: outdir/data.avro<br>
+Ranking of closest known data types, with match-distance (smaller is better):<br>
+<br>
+-------------------------------------------------------------<br>
+1.  'Web server log format', with distance: 45.0<br>
+<br>
+ DISCOVERED LABELS<br>
+  1.  In 'input', LABEL &ltroot&gt AS &ltroot&gt<br>
+  2.  In 'input', LABEL &ltroot&gt.base-12 AS &ltroot&gt.timemodified<br>
+  3.  In 'input', LABEL &ltroot&gt.base-12.hrs AS &ltroot&gt.timemodified.hrs<br>
+  4.  In 'input', LABEL &ltroot&gt.base-12.secs AS &ltroot&gt.timemodified.secs<br>
+  5.  In 'input', LABEL &ltroot&gt.base-12.mins AS &ltroot&gt.timemodified.mins<br>
+  6.  In 'input', LABEL &ltroot&gt.base-10 AS &ltroot&gt.datemodified<br>
+  7.  In 'input', LABEL &ltroot&gt.base-10.month AS &ltroot&gt.datemodified.month<br>
+  8.  In 'input', LABEL &ltroot&gt.base-10.year AS &ltroot&gt.datemodified.year<br>
+  9.  In 'input', LABEL &ltroot&gt.base-10.day AS &ltroot&gt.datemodified.day<br>
+  10.  In 'input', LABEL &ltroot&gt.base-8 AS &ltroot&gt.len<br>
+  11.  In 'input', LABEL &ltroot&gt.base-0 AS &ltroot&gt.url<br>
+<br>
+ UNMATCHED ITEMS IN TARGET DATA TYPE<br>
+  (None)<br>
+<br>
+ UNMATCHED ITEMS IN SOURCE DATA<br>
+  1.  &ltroot&gt.base-2<br>
+  2.  &ltroot&gt.base-6<br>
+  3.  &ltroot&gt.base-4<br>
+  4.  &ltroot&gt.base-14<br>
+</code><p>
+
+We can see that the system has chosen "Web server log format" as the nearest match.  This isn't a perfect match, but it's not bad: a file listing will have a lot of potential similarities with a listing of URLs.  Further, a file listing is almost certainly more similar to a server log than to an HR database or a database of flights.  Let's look at the matches that it suggests.<p>
+
+The first nine essentially map the anonymous data's <code>base-12</code> record structure to the Web server log's <code>timemodified</code> structure, and <code>base-10</code>'s date structure to the server log's <code>datemodified</code>.  These seem like wholly reasonable decisions about labels to apply to the anonymous data.<p>
+
+The system suggests two further labelings: <code>base-8</code> to <code>len</code>, and <code>base-0</code> to <code>url</code>.  The first mapping, dealing with <code>len</code> is spot-on.  The second one is a mistake: the system thinks that the anonymous data's <code>base-0</code>, a permission bit string, should be called a <code>url</code>.  There is nothing in the "Web server log format" that closely matches the data in <code>base-0</code>: ideally, the system would not have applied a label.  We hope to address this problem in the future by improving SchemaDictionary's matching and label scoring metrics.<p>
+
+We can now look at the four fields from the anonymous file listing data that do not receive any mapping.  The first field, <code>base-2</code>, contains the number of links associated with a filename.  <code>base-6</code> is the group owner, and <code>base-4</code> is the user owner.  None of these three fields have any obvious match in the server log data format, so it is a good thing that SchemaDictionary did not try to derive a label for them.  The final field, <code>base-14</code>, represents the filename.  This is probably a closer match to the server log's <code>url</code> than the anonymous data's <code>base-0</code>, and so is arguably an error.  But only arguably.  In truth there is nothing in the current SchemaDictionary that matches <code>base-14</code> precisely.
+
+<hr>
+
+In some cases, SchemaDictionary may not correctly choose the most-similar data type correctly.  For these cases, the user can ask SchemaDictionary to output its top-k "guesses."  If the user types:<p>
+
+<code>
+bin/schemadict suggest -k 3 test-schemadict testout1/data.avro<p>
+</code>
+
+then the system will output its best-3 guesses.  For example:<p>
+
+<code>
+Anonymous data filename: /Users/mjc/cloudera/repos/schemadictionary/testout1/data.avro<br>
+Ranking of closest known data types, with match-distance (smaller is better):<br>
+<br>
+<br>
+-------------------------------------------------------------<br>
+1.  'File listing', with distance: 45.0<br>
+<br>
+...(label details here)...<br>
+<br>
+-------------------------------------------------------------<br>
+2.  'Human resources', with distance: 81.5<br>
+<br>
+...(label details here)...<br>
+<br>
+-------------------------------------------------------------<br>
+3.  'Flight data', with distance: 96.0<br>
+<br>
+...(label details here)...<br>
+</code><p>
+
+Of course, in this case the tool has correctly guessed the closest entry in the dictionary of schemas, so the top-1 answer was sufficient.<p>
+
+<h2>Future Work</h2>
+
+There is lots more work to do with LearnAvro.  Here are just a few of the items on the todo list:
+<ul>
+<li>Attempt to construct a truly comprehensive schema dictionary, consisting of at least dozens and perhaps hundreds of examples.  The goal is for the user's data to have a near-relative in the schema dictionary the vast majority of the time.
+<li>The distance metric for matching anonymous data to known datatypes is relatively untested.  Its accuracy won't be truly known until we can get a larger set of schema dictionary elements
+<li>That said, there are a few SchemaDictionary items that could be improved.  It currently handles unions relatively poorly (or not at all, if the unions are at the root level).
+<li>The LearnAvro component has been tested on a diverse handful of files, but probably has bugs lingering.  Testing it on a larger set of test textfiles would be good.
+<li>The whole reason for LearnAvro to exist is to speed up the process between receipt of a data file and analysis of that file.  Integrating it with existing Hadoop-based analysis tools would help with that process.
+</ul>
 
 
 <h2>Dependencies</h2>
-<p>I depend on nothing!</p>
+<p>LearnAvro depends on a handful of relatively standard libraries.  The most obvious are the Avro and Hadoop projects, but there are many others.</p>
+
 <h2>Install</h2>
-<p>Install me...</p>
+<p>Untar or unzip the package and type <code>ant</code> to build it.</p>
 <h2>License</h2>
 <p>Apache 2.0 </p>
 <h2>Authors</h2>
 <p>Mike Cafarella (michjc@umich.edu)<br/><br/>      </p>
+<h2>Acknowledgments</h2>
+LearnAvro would not be possible without the efforts of all the people behind Hadoop, LearnAvro, and several other open source projects.  It also owes an intellectual debt to Kathleen Fisher, David Walker, Kenny Q. Zhu, and Peter White, the authors of the terrific paper cited above.<p>
 <h2>Contact</h2>
+<p>Mike Cafarella (michjc@umich.edu)<br/>
 <p>Cloudera (github@cloudera.com)<br/>      </p>
 
 
