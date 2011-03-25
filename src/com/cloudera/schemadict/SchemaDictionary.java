@@ -98,12 +98,14 @@ public class SchemaDictionary {
     } catch (ParseException e) {
       HelpFormatter fmt = new HelpFormatter();
       fmt.printHelp("SchemaDictionary", options, true);
+      System.err.println("Required input: <schemadictionary>");
       System.exit(-1);
     }
 
     if (cmd.hasOption("?")) {
       HelpFormatter fmt = new HelpFormatter();
       fmt.printHelp("SchemaDictionary", options, true);
+      System.err.println("Required input: <schemadictionary>");
       System.exit(0);
     }
 
@@ -124,6 +126,7 @@ public class SchemaDictionary {
       System.err.println("Must indicate -a AND -m to add new schema dictionary item");
       HelpFormatter fmt = new HelpFormatter();
       fmt.printHelp("SchemaDictionary", options, true);
+      System.err.println("Required input: <schemadictionary>");
       System.exit(0);
     }
 
@@ -132,6 +135,7 @@ public class SchemaDictionary {
       System.err.println("No schema dictionary path provided.");
       HelpFormatter fmt = new HelpFormatter();
       fmt.printHelp("SchemaDictionary", options, true);
+      System.err.println("Required input: <schemadictionary>");
       System.exit(0);
     }
 

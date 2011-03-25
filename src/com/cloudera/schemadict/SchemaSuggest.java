@@ -104,12 +104,14 @@ public class SchemaSuggest {
     } catch (ParseException e) {
       HelpFormatter fmt = new HelpFormatter();
       fmt.printHelp("SchemaSuggest", options, true);
+      System.err.println("Required inputs: <schemadictionary> <anonymousAvro>");
       System.exit(-1);
     }
 
     if (cmd.hasOption("?")) {
       HelpFormatter fmt = new HelpFormatter();
       fmt.printHelp("SchemaSuggest", options, true);
+      System.err.println("Required inputs: <schemadictionary> <anonymousAvro>");
       System.exit(0);
     }
 
@@ -122,9 +124,10 @@ public class SchemaSuggest {
     }
 
     String[] argArray = cmd.getArgs();
-    if (argArray.length == 0) {
+    if (argArray.length < 2) {
       HelpFormatter fmt = new HelpFormatter();
       fmt.printHelp("SchemaSuggest", options, true);
+      System.err.println("Required inputs: <schemadictionary> <anonymousAvro>");
       System.exit(0);
     }
 
