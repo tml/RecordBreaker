@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<project name="schemadict" default="compile" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
+<project name="learnavro" default="compile" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
     <description>
         simple example build file
     </description>
@@ -9,7 +9,7 @@
   <property name="build.classes" location="build"/>
   <property name="test.src" location="test"/>
   <property name="test.build" location="build/test"/>
-  <property name="lib" location="${build}/ivy/lib/schemadict/default"/>
+  <property name="lib" location="${build}/ivy/lib/learnavro/default"/>
   <property name="dist"  location="dist"/>
   <property name="test.include" value="Test*"/>
 
@@ -257,7 +257,7 @@
     <mkdir dir="${dist}/lib"/>
 
     <!-- Put everything in ${build} into the MyProject-${DSTAMP}.jar file -->
-    <jar jarfile="${dist}/lib/schemadict-${DSTAMP}.jar" basedir="${build}"/>
+    <jar jarfile="${dist}/lib/learnavro-${DSTAMP}.jar" basedir="${build}"/>
   </target>
 
   <target name="clean"
