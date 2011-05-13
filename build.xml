@@ -118,7 +118,7 @@
 	  </target>
 
 	  <target name="ivy-resolve-releaseaudit" depends="ivy-init">
-	    <ivy:resolve settingsRef="${ant.project.name}.ivy.settings" conf="releaseaudit"/>
+	    <ivy:resolve settingsRef="${ant.project.name}.ivy.settings"/>
 	  </target>
 
 	  <target name="ivy-resolve-test" depends="ivy-init">
