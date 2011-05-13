@@ -34,8 +34,8 @@ import org.apache.avro.util.Utf8;
 
 import org.codehaus.jackson.JsonGenerator;
 
-import com.cloudera.learnavro.TestRecord;
-import com.cloudera.learnavro.SchemaSuggest;
+import com.cloudera.schemadict.TestRecord;
+import com.cloudera.schemadict.SchemaSuggest;
 
 /**
  * @author mjc
