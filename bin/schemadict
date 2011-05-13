@@ -69,7 +69,7 @@ if [ "$cygwin" == false ] ; then
 
   JOPTS+="-Djava.library.path=$CMDPATH/build/test:$CMDPATH/build"
 
-  append_jars_onto_classpath "$CMDPATH/build/ivy/lib/schemadict/default"
+  append_jars_onto_classpath "$CMDPATH/build/ivy/lib/learnavro/default"
   append_jars_onto_classpath "$CMDPATH/build"
 
   CLASSPATH+=":$JAVA_HOME/lib/tools.jar"
