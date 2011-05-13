@@ -5,6 +5,7 @@ import java.io.*;
 import java.util.*;
 import org.apache.avro.Schema;
 import org.apache.avro.io.JsonEncoder;
+import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericContainer;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -114,7 +115,7 @@ public class LearnAvro {
       Schema schema = typeTree.getAvroSchema();
       GenericDatumWriter jsonGDWriter = new GenericDatumWriter(schema);
       BufferedOutputStream outJson = new BufferedOutputStream(new FileOutputStream(jsonDataFile));
-      JsonEncoder encoder = new JsonEncoder(schema, outJson);
+      JsonEncoder encoder = EncoderFactory.get().jsonEncoder(schema, outJson);
 
       GenericDatumWriter gdWriter = new GenericDatumWriter(schema);
       DataFileWriter outData = new DataFileWriter(gdWriter);

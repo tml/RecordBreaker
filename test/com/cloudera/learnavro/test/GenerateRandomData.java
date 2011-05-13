@@ -26,6 +26,7 @@ import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.JsonEncoder;
+import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.reflect.ReflectDatumWriter;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.generic.GenericData;
@@ -67,7 +68,7 @@ public class GenerateRandomData {
       List<String> symbols = s.getEnumSymbols();
       return symbols.get(r.nextInt(symbols.size()));
     } else if (stype == Schema.Type.FIXED) {
-      return new GenericData.Fixed(new byte[16]);
+      return new GenericData.Fixed(s, new byte[16]);
     } else if (stype == Schema.Type.FLOAT) {
       return new Float(r.nextFloat());
     } else if (stype == Schema.Type.INT) {
@@ -108,7 +109,7 @@ public class GenerateRandomData {
     if (encodeJson) {
       BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(outfile));
       try {
-        Encoder encoder = new org.apache.avro.io.JsonEncoder(schema, (OutputStream) out);
+        Encoder encoder = EncoderFactory.get().jsonEncoder(schema, (OutputStream) out);
         for (int i = 0; i < numRecords; i++) {
           TestRecord tr = new TestRecord();
           dout.write(tr, encoder);
