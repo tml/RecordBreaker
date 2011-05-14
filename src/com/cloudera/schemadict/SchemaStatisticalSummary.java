@@ -1412,18 +1412,6 @@ public class SchemaStatisticalSummary implements Writable {
                   double min = Math.min(option1, Math.min(option2, option3));
                   storeValue(E, sIdx, uIdx, iIdx, tIdx, vIdx, jIdx, min);
 
-                  if (sIdx == 1 &&
-                      uIdx == 1 &&
-                      iIdx == 8 &&
-                      tIdx == 1 &&
-                      vIdx == 1 &&
-                      jIdx == 8) {
-                    //System.err.println("Option 1: " + option1);
-                    //System.err.println("Option 2: " + option2);
-                    //System.err.println("Option 3: " + option3);
-                    //System.err.println("xIdx: " + xIdx + ", " + "yIdx: " + yIdx);
-                  }
-
                   if (option1 == min) {
                     storeChoice(Echoice, sIdx, uIdx, iIdx, tIdx, vIdx, jIdx,
                                 new PreviousChoice(Echoice, sIdx, xIdx, iIdx, tIdx, vIdx, jIdx));
