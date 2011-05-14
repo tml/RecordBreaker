@@ -1,6 +1,6 @@
 {
   "type" : "record",
-  "name" : "record-1",
+  "name" : "record_1",
   "namespace" : "",
   "fields" : [ {
     "name" : "datemodified",

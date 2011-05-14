@@ -1,6 +1,6 @@
 {
   "type" : "record",
-  "name" : "record-1",
+  "name" : "record_1",
   "namespace" : "",
   "fields" : [ {
     "name" : "firstname",
@@ -12,10 +12,10 @@
     "name" : "salary",
     "type" : "double"
   }, {
-    "name" : "start-date",
+    "name" : "start_date",
     "type" : {
       "type" : "record",
-      "name" : "start-date",
+      "name" : "start_date",
       "fields" : [ {
         "name" : "month",
         "type" : "int"

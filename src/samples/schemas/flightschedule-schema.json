@@ -1,21 +1,21 @@
 {
   "type" : "record",
-  "name" : "record-1",
+  "name" : "record_1",
   "namespace" : "",
   "fields" : [ {
-    "name" : "departure-city",
+    "name" : "departure_city",
     "type" : "string"
   }, {
-    "name" : "destination-city",
+    "name" : "destination_city",
     "type" : "string"
   }, {
     "name" : "airline",
     "type" : "string"
   }, {
-    "name" : "departure-date",
+    "name" : "departure_date",
     "type" : {
       "type" : "record",
-      "name" : "departure-date",
+      "name" : "departure_date",
       "fields" : [ {
         "name" : "month",
         "type" : "int"
@@ -28,10 +28,10 @@
       } ]
     }
   }, {
-    "name" : "departure-time",
+    "name" : "departure_time",
     "type" : {
       "type" : "record",
-      "name" : "departure-time",
+      "name" : "departure_time",
       "fields" : [ {
         "name" : "hrs",
         "type" : "int"
@@ -44,10 +44,10 @@
       } ]
     }
   }, {
-    "name" : "return-date",
+    "name" : "return_date",
     "type" : {
       "type" : "record",
-      "name" : "return-date",
+      "name" : "return_date",
       "fields" : [ {
         "name" : "month",
         "type" : "int"
@@ -60,10 +60,10 @@
       } ]
     }
   }, {
-    "name" : "return-time",
+    "name" : "return_time",
     "type" : {
       "type" : "record",
-      "name" : "return-time",
+      "name" : "return_time",
       "fields" : [ {
         "name" : "hrs",
         "type" : "int"
