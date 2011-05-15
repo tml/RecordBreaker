@@ -42,6 +42,9 @@ public class SchemaMappingOp {
   public String getS1FieldType() {
     return s1.getTypeDesc(nodeid1);
   }
+  public String getS1DocStr() {
+    return s1.getDocStr(nodeid1);
+  }
   public String getS2DatasetLabel() {
     return s2.getDatasetLabel();
   }
@@ -50,6 +53,9 @@ public class SchemaMappingOp {
   }
   public String getS2FieldType() {
     return s2.getTypeDesc(nodeid2);
+  }
+  public String getS2DocStr() {
+    return s2.getDocStr(nodeid2);
   }
   public String toString() {
     if (opcode == CREATE_OP) {

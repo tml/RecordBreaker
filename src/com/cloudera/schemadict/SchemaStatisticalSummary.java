@@ -46,6 +46,10 @@ public class SchemaStatisticalSummary implements Writable {
   static byte MAGIC = (byte) 0xa1;
   static byte VERSION = (byte) 1;
 
+  final static double MATCHCOST_TYPE_CLASH = 1 * 1000 * 1000;
+  final static double MATCHCOST_CREATE = 100 * 1000;
+  final static double MATCHCOST_DELETE = 100 * 1000;
+
   final static short ARRAY_NODE = 1;
   final static short BOOLEAN_NODE = 2;
   final static short BYTES_NODE = 3;
@@ -76,7 +80,13 @@ public class SchemaStatisticalSummary implements Writable {
     SummaryNode parent = null;
     int preorderIdx;
     int numData;
+    String docStr = "";
 
+    public SummaryNode() {
+    }
+    public SummaryNode(String docStr) {
+      this.docStr = docStr;
+    }
     //////////////////////////////////////////
     // Methods for constructing the summary-node tree
     //////////////////////////////////////////
@@ -258,6 +268,19 @@ public class SchemaStatisticalSummary implements Writable {
       }
       return null;
     }
+    public String getDocStr(int nodeid) {
+      if (nodeid == preorderIdx) {
+        return docStr;
+      } else {
+        for (SummaryNode child: children()) {
+          String docstr = child.getDocStr(nodeid);
+          if (docstr != null) {
+            return docstr;
+          }
+        }
+      }
+      return null;
+    }
     /**
      * Find the "label" for the current node.  Since the top-level element in the
      * NodeSummary hierarchy is a record, we know that every element has a label.
@@ -292,14 +315,14 @@ public class SchemaStatisticalSummary implements Writable {
       if (this.getClass() == other.getClass()) {
         return 0.5;
       } else {
-        return 100;
+        return MATCHCOST_TYPE_CLASH;
       }
     }
     public double deleteCost() {
-      return 10;
+      return MATCHCOST_DELETE;
     }
     public double createCost() {
-      return 10;
+      return MATCHCOST_CREATE;
     }
 
     ///////////////////////////////////////////////
@@ -317,7 +340,8 @@ public class SchemaStatisticalSummary implements Writable {
     SummaryNode eltSummary;
     public ArraySummaryNode() {
     }
-    public ArraySummaryNode(SummaryNode eltSummary) {
+    public ArraySummaryNode(SummaryNode eltSummary, String docStr) {
+      super(docStr);
       this.eltSummary = eltSummary;
     }
 
@@ -354,11 +378,13 @@ public class SchemaStatisticalSummary implements Writable {
     public void write(DataOutput out) throws IOException {
       out.writeShort(ARRAY_NODE);
       out.writeInt(numData);
+      UTF8.writeString(out, docStr);
       out.writeInt(totalSize);
       eltSummary.write(out);
     }
     public void readFields(DataInput in) throws IOException {
       this.numData = in.readInt();
+      this.docStr = UTF8.readString(in);
       this.totalSize = in.readInt();
       this.eltSummary = readAndCreate(in);
     }
@@ -371,6 +397,9 @@ public class SchemaStatisticalSummary implements Writable {
     int numTrue;
     int numFalse;
     public BooleanSummaryNode() {
+    }
+    public BooleanSummaryNode(String docStr) {
+      super(docStr);
     }
     public void addData(Boolean b) {
       numData++;
@@ -404,11 +433,13 @@ public class SchemaStatisticalSummary implements Writable {
     public void write(DataOutput out) throws IOException {
       out.writeShort(BOOLEAN_NODE);
       out.writeInt(numData);
+      UTF8.writeString(out, docStr);
       out.writeInt(numTrue);
       out.writeInt(numFalse);
     }
     public void readFields(DataInput in) throws IOException {
       this.numData = in.readInt();
+      this.docStr = UTF8.readString(in);
       this.numTrue = in.readInt();
       this.numFalse = in.readInt();
     }    
@@ -420,6 +451,9 @@ public class SchemaStatisticalSummary implements Writable {
   class BytesSummaryNode extends SummaryNode {
     int totalSize = 0;
     public BytesSummaryNode() {
+    }
+    public BytesSummaryNode(String docStr) {
+      super(docStr);
     }
     public void addData(ByteBuffer bb) {
       numData++;
@@ -449,10 +483,12 @@ public class SchemaStatisticalSummary implements Writable {
     public void write(DataOutput out) throws IOException {
       out.writeShort(BYTES_NODE);
       out.writeInt(numData);
+      UTF8.writeString(out, docStr);
       out.writeInt(totalSize);
     }
     public void readFields(DataInput in) throws IOException {
       this.numData = in.readInt();
+      this.docStr = UTF8.readString(in);
       this.totalSize = in.readInt();
     }    
   }
@@ -463,6 +499,9 @@ public class SchemaStatisticalSummary implements Writable {
   class DoubleSummaryNode extends SummaryNode {
     double total;
     public DoubleSummaryNode() {
+    }
+    public DoubleSummaryNode(String docStr) {
+      super(docStr);
     }
     public void addData(Double d) {
       numData++;
@@ -492,10 +531,12 @@ public class SchemaStatisticalSummary implements Writable {
     public void write(DataOutput out) throws IOException {
       out.writeShort(DOUBLE_NODE);
       out.writeInt(numData);
+      UTF8.writeString(out, docStr);
       out.writeDouble(total);
     }
     public void readFields(DataInput in) throws IOException {
       this.numData = in.readInt();
+      this.docStr = UTF8.readString(in);
       this.total = in.readDouble();
     }    
   }
@@ -509,7 +550,8 @@ public class SchemaStatisticalSummary implements Writable {
     Map<String, Integer> symbolCounts = new HashMap<String, Integer>();
     public EnumSummaryNode() {
     }
-    public EnumSummaryNode(String name, List<String> symbols) {
+    public EnumSummaryNode(String name, List<String> symbols, String docStr) {
+      super(docStr);
       this.name = name;
       for (String symbol: symbols) {
         this.symbolCounts.put(symbol, 1);
@@ -547,6 +589,7 @@ public class SchemaStatisticalSummary implements Writable {
     public void write(DataOutput out) throws IOException {
       out.writeShort(ENUM_NODE);
       out.writeInt(numData);
+      UTF8.writeString(out, docStr);
       out.writeInt(symbolCounts.size());
       for (String symbol: symbolCounts.keySet()) {
         new Text(symbol).write(out);
@@ -555,6 +598,7 @@ public class SchemaStatisticalSummary implements Writable {
     }
     public void readFields(DataInput in) throws IOException {
       this.numData = in.readInt();
+      this.docStr = UTF8.readString(in);
       symbolCounts = new HashMap<String, Integer>();
       int numElts = in.readInt();
       for (int i = 0; i < numElts; i++) {
@@ -576,7 +620,8 @@ public class SchemaStatisticalSummary implements Writable {
     int total;
     public FixedSummaryNode() {
     }
-    public FixedSummaryNode(String name, int size) {
+    public FixedSummaryNode(String name, int size, String docStr) {
+      super(docStr);
       this.name = name;
       this.size = size;
       this.total = 0;
@@ -610,11 +655,13 @@ public class SchemaStatisticalSummary implements Writable {
     public void write(DataOutput out) throws IOException {
       out.writeShort(FIXED_NODE);
       new Text(name).write(out);
+      UTF8.writeString(out, docStr);
       out.writeInt(size);
       out.writeInt(total);
     }
     public void readFields(DataInput in) throws IOException {
       this.name = Text.readString(in);
+      this.docStr = UTF8.readString(in);
       this.size = in.readInt();
       this.total = in.readInt();
     }    
@@ -626,6 +673,9 @@ public class SchemaStatisticalSummary implements Writable {
   class FloatSummaryNode extends SummaryNode {
     float total;
     public FloatSummaryNode() {
+    }
+    public FloatSummaryNode(String docStr) {
+      super(docStr);
     }
     public void addData(Float f) {
       numData++;
@@ -655,10 +705,12 @@ public class SchemaStatisticalSummary implements Writable {
     public void write(DataOutput out) throws IOException {
       out.writeShort(FLOAT_NODE);
       out.writeInt(numData);
+      UTF8.writeString(out, docStr);
       out.writeFloat(total);
     }
     public void readFields(DataInput in) throws IOException {
       this.numData = in.readInt();
+      this.docStr = UTF8.readString(in);
       this.total = in.readFloat();
     }    
   }
@@ -670,9 +722,36 @@ public class SchemaStatisticalSummary implements Writable {
     int total;
     public IntegerSummaryNode() {
     }
+    public IntegerSummaryNode(String docStr) {
+      super(docStr);
+    }
     public void addData(Integer i) {
       numData++;
       total += i.intValue();
+    }
+
+    ///////////////////////////////////////////////
+    // Cost functions for schema matching
+    ///////////////////////////////////////////////
+    public double transformCost(SummaryNode other) {
+      if (this.getClass() == other.getClass()) {
+        IntegerSummaryNode iother = (IntegerSummaryNode) other;
+        double thisAvg = total / (1.0 * numData);
+        double otherAvg = iother.total / (1.0 * iother.numData);
+
+        // Currently, simply return difference of means as measure of integer set agreement.
+        // This is a terrible measure that will fail for many comparisons (eg, it ignores 
+        // distribution family entirely).  A placeholder for something better, soon.
+        double cost = Math.abs(thisAvg - otherAvg);
+        /**
+        System.err.println("------------------------------------------------");
+        System.err.println("LOCAL INT: " + dumpSummary(0) + " VS " + other.dumpSummary(0));
+        System.err.println("INT compare: " + thisAvg + " vs " + otherAvg + ", cost: " + cost);
+        **/
+        return cost;
+      } else {
+        return MATCHCOST_TYPE_CLASH;
+      }
     }
 
     /////////////////////////////
@@ -698,10 +777,12 @@ public class SchemaStatisticalSummary implements Writable {
     public void write(DataOutput out) throws IOException {
       out.writeShort(INT_NODE);
       out.writeInt(numData);
+      UTF8.writeString(out, docStr);
       out.writeInt(total);
     }
     public void readFields(DataInput in) throws IOException {
       this.numData = in.readInt();
+      this.docStr = UTF8.readString(in);
       this.total = in.readInt();
     }    
   }
@@ -712,6 +793,9 @@ public class SchemaStatisticalSummary implements Writable {
   class LongSummaryNode extends SummaryNode {
     long total;
     public LongSummaryNode() {
+    }
+    public LongSummaryNode(String docStr) {
+      super(docStr);
     }
     public void addData(Long l) {
       numData++;
@@ -741,10 +825,12 @@ public class SchemaStatisticalSummary implements Writable {
     public void write(DataOutput out) throws IOException {
       out.writeShort(LONG_NODE);
       out.writeInt(numData);
+      UTF8.writeString(out, docStr);
       out.writeLong(total);
     }
     public void readFields(DataInput in) throws IOException {
       this.numData = in.readInt();
+      this.docStr = UTF8.readString(in);
       this.total = in.readLong();
     }    
   }
@@ -758,7 +844,8 @@ public class SchemaStatisticalSummary implements Writable {
 
     public MapSummaryNode() {
     }
-    public MapSummaryNode(Schema modelS) {
+    public MapSummaryNode(Schema modelS, String docStr) {
+      super(docStr);
       this.modelS = modelS;
     }
     public void addData(Map m) {
@@ -768,7 +855,7 @@ public class SchemaStatisticalSummary implements Writable {
         Utf8 key = (Utf8) it.next();
         SummaryNode s = stats.get(key);
         if (s == null) {
-          s = buildStructure(modelS);
+          s = buildStructure(modelS, modelS.getDoc());
           stats.put(key, s);
         }
         s.addData(m.get(key));
@@ -818,6 +905,7 @@ public class SchemaStatisticalSummary implements Writable {
     public void write(DataOutput out) throws IOException {
       out.writeShort(MAP_NODE);
       out.writeInt(numData);
+      UTF8.writeString(out, docStr);
       out.writeInt(stats.size());
       for (Utf8 key: stats.keySet()) {
         new Text(key.toString()).write(out);
@@ -826,6 +914,7 @@ public class SchemaStatisticalSummary implements Writable {
     }
     public void readFields(DataInput in) throws IOException {
       this.numData = in.readInt();
+      this.docStr = UTF8.readString(in);
       int numElts = in.readInt();
       for (int i = 0; i < numElts; i++) {
         Text key = new Text();
@@ -841,6 +930,9 @@ public class SchemaStatisticalSummary implements Writable {
    ****************************************************/
   class NullSummaryNode extends SummaryNode {
     public NullSummaryNode() {
+    }
+    public NullSummaryNode(String docStr) {
+      super(docStr);
     }
     public void addData() {
       numData++;
@@ -863,9 +955,11 @@ public class SchemaStatisticalSummary implements Writable {
     public void write(DataOutput out) throws IOException {
       out.writeShort(NULL_NODE);
       out.writeInt(numData);
+      UTF8.writeString(out, docStr);
     }
     public void readFields(DataInput in) throws IOException {
       this.numData = in.readInt();
+      this.docStr = UTF8.readString(in);
     }    
   }
 
@@ -877,7 +971,8 @@ public class SchemaStatisticalSummary implements Writable {
     Map<String, SummaryNode> recordSummary = new HashMap<String, SummaryNode>();
     public RecordSummaryNode() {
     }
-    public RecordSummaryNode(String name) {
+    public RecordSummaryNode(String name, String docStr) {
+      super(docStr);
       this.name = name;
     }
     public List<SummaryNode> children() {
@@ -951,6 +1046,7 @@ public class SchemaStatisticalSummary implements Writable {
     public void write(DataOutput out) throws IOException {
       out.writeShort(RECORD_NODE);
       out.writeInt(numData);
+      UTF8.writeString(out, docStr);
       out.writeInt(recordSummary.size());
       for (String fname: recordSummary.keySet()) {
         new Text(fname).write(out);
@@ -959,6 +1055,7 @@ public class SchemaStatisticalSummary implements Writable {
     }
     public void readFields(DataInput in) throws IOException {
       this.numData = in.readInt();
+      this.docStr = UTF8.readString(in);
       int numRecs = in.readInt();
       for (int i = 0; i < numRecs; i++) {
         Text fname = new Text();
@@ -975,11 +1072,27 @@ public class SchemaStatisticalSummary implements Writable {
    ****************************************************/
   class StringSummaryNode extends SummaryNode {
     int totalLength;
+    List<Utf8> observedStrings = new ArrayList<Utf8>();
     public StringSummaryNode() {
+    }
+    public StringSummaryNode(String docStr) {
+      super(docStr);
     }
     public void addData(Utf8 s) {
       numData++;
       totalLength += s.getLength();
+      observedStrings.add(s);
+    }
+
+    ///////////////////////////////////////////////
+    // Cost functions for schema matching
+    ///////////////////////////////////////////////
+    public double transformCost(SummaryNode other) {
+      if (this.getClass() == other.getClass()) {
+        return 0.5;
+      } else {
+        return MATCHCOST_TYPE_CLASH;
+      }      
     }
 
     /////////////////////////////
@@ -1005,11 +1118,20 @@ public class SchemaStatisticalSummary implements Writable {
     public void write(DataOutput out) throws IOException {
       out.writeShort(STRING_NODE);
       out.writeInt(numData);
+      UTF8.writeString(out, docStr);
       out.writeInt(totalLength);
+      for (Utf8 s: observedStrings) {
+        UTF8.writeString(out, s.toString());
+      }
     }
     public void readFields(DataInput in) throws IOException {
       this.numData = in.readInt();
+      this.docStr = UTF8.readString(in);
       this.totalLength = in.readInt();
+      observedStrings.clear();
+      for (int i = 0; i < numData; i++) {
+        observedStrings.add(new Utf8(UTF8.readString(in)));
+      }
     }    
   }
 
@@ -1022,6 +1144,9 @@ public class SchemaStatisticalSummary implements Writable {
     Map<Schema.Type, SummaryNode> unionTypes = new HashMap<Schema.Type, SummaryNode>();
     Map<Schema.Type, Integer> unionTypeCounts = new HashMap<Schema.Type, Integer>();
     public UnionSummaryNode() {
+    }
+    public UnionSummaryNode(String docStr) {
+      super(docStr);
     }
     public void addType(Schema.Type t, SummaryNode sn) {
       if (unionTypes.get(t) == null) {
@@ -1097,6 +1222,7 @@ public class SchemaStatisticalSummary implements Writable {
     public void write(DataOutput out) throws IOException {
       out.writeShort(UNION_NODE);
       out.writeInt(numData);
+      UTF8.writeString(out, docStr);
       out.writeInt(unionTypes.size());
       for (Schema.Type t: unionTypes.keySet()) {
         new Text(t.toString()).write(out);
@@ -1106,6 +1232,7 @@ public class SchemaStatisticalSummary implements Writable {
     }
     public void readFields(DataInput in) throws IOException {
       this.numData = in.readInt();
+      this.docStr = UTF8.readString(in);
       int numTypes = in.readInt();
       for (int i = 0; i < numTypes; i++) {
         Text tLabel = new Text();
@@ -1189,7 +1316,7 @@ public class SchemaStatisticalSummary implements Writable {
       if (s.getType() != Schema.Type.RECORD) {
         throw new IOException("Passed-in top-level Schema instance must be of type Schema.Type.RECORD");
       }
-      this.root = buildStructure(s);
+      this.root = buildStructure(s, "ROOT");
 
       //
       // Iterate through all records and collect statistics on each Schema field.
@@ -1289,42 +1416,42 @@ public class SchemaStatisticalSummary implements Writable {
   /**
    * Build a Summary structure out of the given schema.  Helper method.
    */ 
-  SummaryNode buildStructure(Schema s) {
+  SummaryNode buildStructure(Schema s, String docStr) {
     Schema.Type stype = s.getType();
     if (stype == Schema.Type.ARRAY) {
-      return new ArraySummaryNode(buildStructure(s.getElementType()));
+      return new ArraySummaryNode(buildStructure(s.getElementType(), s.getDoc()), docStr);
     } else if (stype == Schema.Type.BOOLEAN) {
-      return new BooleanSummaryNode();
+      return new BooleanSummaryNode(docStr);
     } else if (stype == Schema.Type.BYTES) {
-      return new BytesSummaryNode();
+      return new BytesSummaryNode(docStr);
     } else if (stype == Schema.Type.DOUBLE) {
-      return new DoubleSummaryNode();
+      return new DoubleSummaryNode(docStr);
     } else if (stype == Schema.Type.ENUM) {
-      return new EnumSummaryNode(s.getFullName(), s.getEnumSymbols());
+      return new EnumSummaryNode(s.getFullName(), s.getEnumSymbols(), docStr);
     } else if (stype == Schema.Type.FIXED) {
-      return new FixedSummaryNode(s.getFullName(), s.getFixedSize());
+      return new FixedSummaryNode(s.getFullName(), s.getFixedSize(), docStr);
     } else if (stype == Schema.Type.FLOAT) {
-      return new FloatSummaryNode();
+      return new FloatSummaryNode(docStr);
     } else if (stype == Schema.Type.INT) {
-      return new IntegerSummaryNode();
+      return new IntegerSummaryNode(docStr);
     } else if (stype == Schema.Type.LONG) {
-      return new LongSummaryNode();
+      return new LongSummaryNode(docStr);
     } else if (stype == Schema.Type.MAP) {
-      return new MapSummaryNode(s.getValueType());
+      return new MapSummaryNode(s.getValueType(), docStr);
     } else if (stype == Schema.Type.NULL) {
-      return new NullSummaryNode();
+      return new NullSummaryNode(docStr);
     } else if (stype == Schema.Type.RECORD) {
-      RecordSummaryNode rsn = new RecordSummaryNode(s.getFullName());
+      RecordSummaryNode rsn = new RecordSummaryNode(s.getFullName(), docStr);
       for (Field f: s.getFields()) {
-        rsn.addField(f.name(), buildStructure(f.schema()));
+        rsn.addField(f.name(), buildStructure(f.schema(), f.doc()));
       }
       return rsn;
     } else if (stype == Schema.Type.STRING) {
-      return new StringSummaryNode();
+      return new StringSummaryNode(docStr);
     } else if (stype == Schema.Type.UNION) {
-      UnionSummaryNode usn = new UnionSummaryNode();
+      UnionSummaryNode usn = new UnionSummaryNode(docStr);
       for (Schema subschema: s.getTypes()) {
-        usn.addType(subschema.getType(), buildStructure(subschema));
+        usn.addType(subschema.getType(), buildStructure(subschema, subschema.getDoc()));
       }
     }
     return null;
@@ -1652,6 +1779,9 @@ public class SchemaStatisticalSummary implements Writable {
   }
   public String getTypeDesc(int nodeid) {
     return root.getTypeDesc(nodeid);
+  }
+  public String getDocStr(int nodeid) {
+    return root.getDocStr(nodeid);
   }
 
   ////////////////////////////////////////////////
