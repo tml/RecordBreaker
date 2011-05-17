@@ -10,6 +10,7 @@ public class SchemaMappingOp {
   public static int CREATE_OP = 1;
   public static int DELETE_OP = 2;
   public static int TRANSFORM_OP = 3;
+  public static int NEGATIVE_TRANSFORM_OP = 4;
 
   int opcode;
   SchemaStatisticalSummary s1;
@@ -57,6 +58,16 @@ public class SchemaMappingOp {
   public String getS2DocStr() {
     return s2.getDocStr(nodeid2);
   }
+  public int getOpcode() {
+    return opcode;
+  }
+  public int getNodeId1() {
+    return nodeid1;
+  }
+  public int getNodeId2() {
+    return nodeid2;
+  }
+  
   public String toString() {
     if (opcode == CREATE_OP) {
       return "CREATE " + nodeid1 + "(" + s1.getDesc(nodeid1) + ")";
@@ -64,6 +75,8 @@ public class SchemaMappingOp {
       return "DELETE " + nodeid1 + "(" + s1.getDesc(nodeid1) + ")";
     } else if (opcode == TRANSFORM_OP) {
       return "TRANSFORM " + nodeid1 + " (" + s1.getDesc(nodeid1) + "," + nodeid1 + ")" + " => " + nodeid2 + " (" + s2.getDesc(nodeid2) + "," + nodeid2 + ")";
+    } else if (opcode == NEGATIVE_TRANSFORM_OP) {
+      return "NEGATIVE-TRANSFORM " + nodeid1 + " (" + s1.getDesc(nodeid1) + "," + nodeid1 + ")" + " => " + nodeid2 + " (" + s2.getDesc(nodeid2) + "," + nodeid2 + ")";
     } else {
       return "<unknown>";
     }

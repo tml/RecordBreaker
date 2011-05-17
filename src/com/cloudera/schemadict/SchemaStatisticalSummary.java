@@ -1572,7 +1572,7 @@ public class SchemaStatisticalSummary implements Writable {
       minM[i] = new double[t2.size()+1];
     }
     minM[1][1] = 0;
-    // The choice is EMPTY
+    storeChoice(Mchoice, 1, 1, new SchemaMappingOp(SchemaMappingOp.TRANSFORM_OP, this, 1, other, 1));
 
     for (SummaryNode iNode: t1.preorder()) {
       int iIdx = iNode.preorderCount();
@@ -1601,16 +1601,21 @@ public class SchemaStatisticalSummary implements Writable {
 
             //
             // REMIND - mjc - I'm not sure this code correctly translates the min cost into 
-            // an appropriate operation reconstruction.  This appears to be where we incorrectly
+            // an appropriate operation reconstruction.  This appears to be where we sometimes incorrectly
             // pursue a delete/create strategy instead of a lower-cost transformation-based one.
             //
             if (tmp <= minM[iIdx][jIdx]) {
               minM[iIdx][jIdx] = tmp;
               curBestOps.clear();
+              // We substract the s-t transformation cost from the "tmp" computation above, as the other terms count it
+              // twice.  Thus, the operation-generation code must substract a TRANSFORM out of the op-stream.
+              // This is why the code adds a "Negative Transformation".  It will be used to cancel out a TRANSFORM
+              // in the final operation stream later on.
               curBestOps.add(new PreviousChoice(Mchoice, sIdx, tIdx));
               curBestOps.add(new PreviousChoice(Echoice, 
                                                 sIdx, iNode.parent().preorderCount(), iIdx - 1,
                                                 tIdx, jNode.parent().preorderCount(), jIdx - 1));
+              curBestOps.add(new SchemaMappingOp(SchemaMappingOp.NEGATIVE_TRANSFORM_OP, this, sIdx, other, tIdx));
             }
             // The current possible choice is OPS-FROM-MIN(S, T) PLUS OPS-FROM-E(s, i-1, t, j-1)
           }
@@ -1641,7 +1646,9 @@ public class SchemaStatisticalSummary implements Writable {
     }
 
     D[1][1] = 0;
-    // Ops from D[1][1] is EMPTY
+    storeChoice(Dchoice, 1, 1, new SchemaMappingOp(SchemaMappingOp.TRANSFORM_OP, this, 1, other, 1));
+
+
     for (SummaryNode iNode: t1.preorder()) {
       int i = iNode.preorderCount();
       if (i < 2) {
@@ -1719,15 +1726,45 @@ public class SchemaStatisticalSummary implements Writable {
       for (SchemaMappingOp op: bestOps) {
         //System.err.println("OP: " + op);
         if (op instanceof PreviousChoice) {
+          //System.err.print("  ==> YIELDS ==> ");
+          //for (SchemaMappingOp op2: ((PreviousChoice) op).getOps()) {
+          //System.err.print(" " + op2 + ", ");
+          //}
+          //System.err.println();
           newOps.addAll(((PreviousChoice) op).getOps());
           maybeHasPrev = true;
         } else {
           newOps.add(op);
         }
       }
+      //System.err.println("  Added " + newOps.size() + " ops.");
+      //for (SchemaMappingOp curOp: newOps) {
+      //System.err.println("    " + curOp);
+      //}
       bestOps = newOps;
       counter++;
       //System.err.println();
+    }
+
+    // Finally, resolve "negative" operations
+    List<SchemaMappingOp> negativeOps = new ArrayList<SchemaMappingOp>();
+    for (Iterator<SchemaMappingOp> it = bestOps.iterator(); it.hasNext(); ) {
+      SchemaMappingOp op = it.next();
+      if (op.getOpcode() == SchemaMappingOp.NEGATIVE_TRANSFORM_OP) {
+        it.remove();
+        negativeOps.add(op);
+      }
+    }
+    for (SchemaMappingOp negativeOp: negativeOps) {
+      for (Iterator<SchemaMappingOp> it = bestOps.iterator(); it.hasNext(); ) {      
+        SchemaMappingOp candidate = it.next();
+        if (candidate.getOpcode() == SchemaMappingOp.TRANSFORM_OP &&
+            candidate.getNodeId1() == negativeOp.getNodeId1() &&
+            candidate.getNodeId2() == negativeOp.getNodeId2()) {
+          it.remove();
+          break;
+        }
+      }
     }
 
     // Distance of best mapping is stored in D[max-i][max-j].
