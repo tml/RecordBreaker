@@ -3,13 +3,13 @@
   "name" : "record_1",
   "namespace" : "",
   "fields" : [ {
-    "name" : "firstname",
-    "type" : "string"
-  }, {
-    "name" : "lastname",
+    "name" : "name",
     "type" : "string"
   }, {
     "name" : "salary",
+    "type" : "double"
+  }, {
+    "name" : "vacationdays",
     "type" : "double"
   }, {
     "name" : "start_date",
