@@ -46,9 +46,9 @@ public class SchemaStatisticalSummary implements Writable {
   static byte MAGIC = (byte) 0xa1;
   static byte VERSION = (byte) 1;
 
-  final static double MATCHCOST_TYPE_CLASH = 1 * 1000 * 1000;
-  final static double MATCHCOST_CREATE = 100 * 1000;
-  final static double MATCHCOST_DELETE = 100 * 1000;
+  final static double MATCHCOST_TYPE_CLASH = 1 * 10 * 1000;
+  final static double MATCHCOST_CREATE = 1 * 1000;
+  final static double MATCHCOST_DELETE = 1 * 1000;
 
   final static short ARRAY_NODE = 1;
   final static short BOOLEAN_NODE = 2;
@@ -378,7 +378,7 @@ public class SchemaStatisticalSummary implements Writable {
     public void write(DataOutput out) throws IOException {
       out.writeShort(ARRAY_NODE);
       out.writeInt(numData);
-      UTF8.writeString(out, docStr);
+      UTF8.writeString(out, docStr == null ? "" : docStr);
       out.writeInt(totalSize);
       eltSummary.write(out);
     }
@@ -433,7 +433,7 @@ public class SchemaStatisticalSummary implements Writable {
     public void write(DataOutput out) throws IOException {
       out.writeShort(BOOLEAN_NODE);
       out.writeInt(numData);
-      UTF8.writeString(out, docStr);
+      UTF8.writeString(out, docStr == null ? "" : docStr);
       out.writeInt(numTrue);
       out.writeInt(numFalse);
     }
@@ -483,7 +483,7 @@ public class SchemaStatisticalSummary implements Writable {
     public void write(DataOutput out) throws IOException {
       out.writeShort(BYTES_NODE);
       out.writeInt(numData);
-      UTF8.writeString(out, docStr);
+      UTF8.writeString(out, docStr == null ? "" : docStr);
       out.writeInt(totalSize);
     }
     public void readFields(DataInput in) throws IOException {
@@ -531,7 +531,7 @@ public class SchemaStatisticalSummary implements Writable {
     public void write(DataOutput out) throws IOException {
       out.writeShort(DOUBLE_NODE);
       out.writeInt(numData);
-      UTF8.writeString(out, docStr);
+      UTF8.writeString(out, docStr == null ? "" : docStr);
       out.writeDouble(total);
     }
     public void readFields(DataInput in) throws IOException {
@@ -589,7 +589,7 @@ public class SchemaStatisticalSummary implements Writable {
     public void write(DataOutput out) throws IOException {
       out.writeShort(ENUM_NODE);
       out.writeInt(numData);
-      UTF8.writeString(out, docStr);
+      UTF8.writeString(out, docStr == null ? "" : docStr);
       out.writeInt(symbolCounts.size());
       for (String symbol: symbolCounts.keySet()) {
         new Text(symbol).write(out);
@@ -655,7 +655,7 @@ public class SchemaStatisticalSummary implements Writable {
     public void write(DataOutput out) throws IOException {
       out.writeShort(FIXED_NODE);
       new Text(name).write(out);
-      UTF8.writeString(out, docStr);
+      UTF8.writeString(out, docStr == null ? "" : docStr);
       out.writeInt(size);
       out.writeInt(total);
     }
@@ -705,7 +705,7 @@ public class SchemaStatisticalSummary implements Writable {
     public void write(DataOutput out) throws IOException {
       out.writeShort(FLOAT_NODE);
       out.writeInt(numData);
-      UTF8.writeString(out, docStr);
+      UTF8.writeString(out, docStr == null ? "" : docStr);
       out.writeFloat(total);
     }
     public void readFields(DataInput in) throws IOException {
@@ -777,7 +777,7 @@ public class SchemaStatisticalSummary implements Writable {
     public void write(DataOutput out) throws IOException {
       out.writeShort(INT_NODE);
       out.writeInt(numData);
-      UTF8.writeString(out, docStr);
+      UTF8.writeString(out, (docStr == null) ? "" : docStr);
       out.writeInt(total);
     }
     public void readFields(DataInput in) throws IOException {
@@ -825,7 +825,7 @@ public class SchemaStatisticalSummary implements Writable {
     public void write(DataOutput out) throws IOException {
       out.writeShort(LONG_NODE);
       out.writeInt(numData);
-      UTF8.writeString(out, docStr);
+      UTF8.writeString(out, docStr == null ? "" : docStr);
       out.writeLong(total);
     }
     public void readFields(DataInput in) throws IOException {
@@ -905,7 +905,7 @@ public class SchemaStatisticalSummary implements Writable {
     public void write(DataOutput out) throws IOException {
       out.writeShort(MAP_NODE);
       out.writeInt(numData);
-      UTF8.writeString(out, docStr);
+      UTF8.writeString(out, docStr == null ? "" : docStr);
       out.writeInt(stats.size());
       for (Utf8 key: stats.keySet()) {
         new Text(key.toString()).write(out);
@@ -955,7 +955,7 @@ public class SchemaStatisticalSummary implements Writable {
     public void write(DataOutput out) throws IOException {
       out.writeShort(NULL_NODE);
       out.writeInt(numData);
-      UTF8.writeString(out, docStr);
+      UTF8.writeString(out, docStr == null ? "" : docStr);
     }
     public void readFields(DataInput in) throws IOException {
       this.numData = in.readInt();
@@ -1046,7 +1046,7 @@ public class SchemaStatisticalSummary implements Writable {
     public void write(DataOutput out) throws IOException {
       out.writeShort(RECORD_NODE);
       out.writeInt(numData);
-      UTF8.writeString(out, docStr);
+      UTF8.writeString(out, docStr == null ? "" : docStr);
       out.writeInt(recordSummary.size());
       for (String fname: recordSummary.keySet()) {
         new Text(fname).write(out);
@@ -1118,7 +1118,7 @@ public class SchemaStatisticalSummary implements Writable {
     public void write(DataOutput out) throws IOException {
       out.writeShort(STRING_NODE);
       out.writeInt(numData);
-      UTF8.writeString(out, docStr);
+      UTF8.writeString(out, docStr == null ? "" : docStr);
       out.writeInt(totalLength);
       for (Utf8 s: observedStrings) {
         UTF8.writeString(out, s.toString());
@@ -1222,7 +1222,7 @@ public class SchemaStatisticalSummary implements Writable {
     public void write(DataOutput out) throws IOException {
       out.writeShort(UNION_NODE);
       out.writeInt(numData);
-      UTF8.writeString(out, docStr);
+      UTF8.writeString(out, docStr == null ? "" : docStr);
       out.writeInt(unionTypes.size());
       for (Schema.Type t: unionTypes.keySet()) {
         new Text(t.toString()).write(out);
@@ -1576,6 +1576,25 @@ public class SchemaStatisticalSummary implements Writable {
 
     for (SummaryNode iNode: t1.preorder()) {
       int iIdx = iNode.preorderCount();
+      if (iIdx < 2) {
+        continue;
+      }
+      minM[iIdx][1] = minM[iIdx-1][1] + iNode.deleteCost();
+      storeChoice(Mchoice, iIdx, 1, new PreviousChoice(Mchoice, iIdx-1, 1));
+      storeChoice(Mchoice, iIdx, 1, new SchemaMappingOp(SchemaMappingOp.DELETE_OP, this, iIdx));
+    }
+    for (SummaryNode jNode: t2.preorder()) {
+      int jIdx = jNode.preorderCount();
+      if (jIdx < 2) {
+        continue;
+      }
+      minM[1][jIdx] = minM[1][jIdx-1] + jNode.createCost();
+      storeChoice(Mchoice, 1, jIdx, new PreviousChoice(Mchoice, 1, jIdx-1));
+      storeChoice(Mchoice, 1, jIdx, new SchemaMappingOp(SchemaMappingOp.CREATE_OP, other, jIdx));
+    }
+
+    for (SummaryNode iNode: t1.preorder()) {
+      int iIdx = iNode.preorderCount();
       if (iNode.preorderCount() < 2) {
         continue;
       }
@@ -1584,6 +1603,7 @@ public class SchemaStatisticalSummary implements Writable {
         if (jNode.preorderCount() < 2) {
           continue;
         }
+
         SummaryNode chosenSNode = null;
         SummaryNode chosenTNode = null;
 
