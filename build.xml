@@ -195,6 +195,14 @@
 	    </echo>
 	  </target>
 
+  <!-- Run Apache rat to find license issues -->
+  <target name="-taskdef">
+  </target>
+  <target name="rat" depends="init,ivy-retrieve" description="Run apache rat to test license issues">
+    <rat:report xmlns:rat="antlib:org.apache.rat.anttasks">
+      <fileset dir="${src}" excludesfile="${src}/rat-excludes.txt" />
+    </rat:report>
+  </target>
 	
   <target name="init">
     <!-- Create the time stamp -->
