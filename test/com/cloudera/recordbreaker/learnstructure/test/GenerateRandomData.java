@@ -12,7 +12,7 @@
  * the specific language governing permissions and limitations under the
  * License.
  */
-package com.cloudera.learnavro.test;
+package com.cloudera.recordbreaker.learnstructure.test;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -48,8 +48,8 @@ import org.apache.avro.util.Utf8;
 
 import org.codehaus.jackson.JsonGenerator;
 
-import com.cloudera.schemadict.TestRecord;
-import com.cloudera.schemadict.SchemaSuggest;
+import com.cloudera.recordbreaker.schemadict.TestRecord;
+import com.cloudera.recordbreaker.schemadict.SchemaSuggest;
 
 /**
  * @author mjc

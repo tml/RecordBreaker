@@ -40,8 +40,8 @@ import org.apache.avro.reflect.ReflectDatumWriter;
 import org.apache.avro.reflect.ReflectData;
 import org.codehaus.jackson.JsonGenerator;
 
-import com.cloudera.schemadict.TestRecord;
-import com.cloudera.schemadict.SchemaSuggest;
+import com.cloudera.recordbreaker.schemadict.TestRecord;
+import com.cloudera.recordbreaker.schemadict.SchemaSuggest;
 
 /*********************************************************************
  * This class generates a number of test data files for the schema inference program.
