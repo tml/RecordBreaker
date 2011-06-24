@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 	
 
-	<title>LearnAvro</title>
+	<title>RecordBreaker</title>
 	
 	<style type="text/css">
 		body {
@@ -31,25 +31,25 @@
 </head>
 
 <body>
-  <a href="http://github.com/cloudera/LearnAvro"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"></a>
+  <a href="http://github.com/cloudera/RecordBreaker"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"></a>
 
   <div id="container">
 
     <div class="download">
-      <a href="http://github.com/cloudera/LearnAvro/zipball/master">
+      <a href="http://github.com/cloudera/RecordBreaker/zipball/master">
         <img border="0" width="90" src="http://github.com/images/modules/download/zip.png"></a>
-      <a href="http://github.com/cloudera/LearnAvro/tarball/master">
+      <a href="http://github.com/cloudera/RecordBreaker/tarball/master">
         <img border="0" width="90" src="http://github.com/images/modules/download/tar.png"></a>
     </div>
 
-    <h1><a href="http://github.com/cloudera/LearnAvro">LearnAvro</a>
+    <h1><a href="http://github.com/cloudera/RecordBreaker">RecordBreaker</a>
 </h1>
 
     <div class="description">
-      LearnAvro: Automatic structure for your HDFS data.
+      RecordBreaker: Automatic structure for your text-formatted data.
     </div>
 
-   LearnAvro is a project that automatically turns your text-formatted data (logs, sensor readings, etc) into structured Avro data, without any need to write parsers or extractors.  Its goal is to dramatically reduce the time spent preparing data for analysis, enabling more time for the analysis itself.<p>
+   RecordBreaker is a project that automatically turns your text-formatted data (logs, sensor readings, etc) into structured Avro data, without any need to write parsers or extractors.  Its goal is to dramatically reduce the time spent preparing data for analysis, enabling more time for the analysis itself.<p>
 
 </p><h2>Introduction</h2>
     <p>
@@ -63,17 +63,17 @@ It contains a source IP address, followed by a user id, followed by an date and 
 
 When a user wants to process such "near-structured" data with MapReduce, Pig, or some similar tool, she must laboriously reconstruct the metadata that is obvious to anyone who just <i> eyeballs the data</i>.  Performing this reconstruction usually entails writing a parser or extractor, often one based on relatively brittle regular expressions.  It's true that the Common Log Format is so, uh, <i>common</i> that writing a single good parser for it is probably worthwhile.  However, there are also file listings, album track listings, temperature readings, flight schedules, and many many other kinds of data; the number of good parsers we need to write gets large, quickly.  Writing all of these straightforward extractors, again and again, is a time-consuming and error-prone pain for everyone.  We believe it is a major obstacle to faster and easier data analytics</p><p>
 
-The LearnAvro project aims to <i>automatically generate structure</i> for text-embedded data.  It consists of two main components:
+The RecordBreaker project aims to <i>automatically generate structure</i> for text-embedded data.  It consists of two main components:
 </p><ol>
-<li><b>LearnAvro</b> takes a text file as input and derives a parser that breaks lines of the file into typed fields.  For example, the above web log entry is broken into <tt>127.0.0.1</tt>, followed by <tt>frank</tt>, etc.
-</li><li><b>SchemaDictionary</b> takes data that's been parsed by LearnAvro and applies topic-specific labels.  For example, <tt>127.0.0.1</tt> gets labelled as <i>client ip address</i>, and <tt>frank</tt> is labelled as <tt>user id</tt>.
+<li><b>LearnStructure</b> takes a text file as input and derives a parser that breaks lines of the file into typed fields.  For example, the above web log entry is broken into <tt>127.0.0.1</tt>, followed by <tt>frank</tt>, etc.
+</li><li><b>SchemaDictionary</b> takes data that's been parsed by LearnStructure and applies topic-specific labels.  For example, <tt>127.0.0.1</tt> gets labelled as <i>client ip address</i>, and <tt>frank</tt> is labelled as <tt>user id</tt>.
 </li></ol>
 
     As you can probably guess, the target structured data format is <a href="http://avro.apache.org/">Avro</a>.  Avro allows efficient cross-platform data serialization, similar to <a href="http://incubator.apache.org/thrift/">Thrift</a> or <a href="http://code.google.com/p/protobuf/">Protocol Buffers</a>.  Data stored in Avro has many advantages (read this <a href="http://www.facebook.com/note.php?note_id=167777112002">overview of Avro</a> for more) and many tools support Avro directly: <a href="http://hadoop.apache.org/mapreduce/">Hadoop MapReduce</a>, <a href="http://hbase.apache.org/">HBase</a>, <a href="http://pig.apache.org/">Pig</a>, and others.<p>
     </p>
 
 <h2>Related Work</h2>
-  Our work on the LearnAvro component draws inspiration from the PADS research project (<a href="">http://www.padsproj.org/index.html</a>), in particular the paper <a href="http://www.padsproj.org/papers/popl08.pdf">From Dirt to Shovels: Fully Automatic Tool Generation from Ad Hoc Data, by Fisher, Walker, Zhu, and White.  Published in POPL, 2008.</a>.  That paper itself draws on many papers in the area of information extraction and related fields.  The authors have released code for their system, written in ML.  ML is a great language, but is not well-suited to our needs: it is not supported by Avro, and is unlikely to appeal to many of the developers currently involved with the Hadoop ecosystem.<p>
+  Our work on the LearnStructure component draws inspiration from the PADS research project (<a href="">http://www.padsproj.org/index.html</a>), in particular the paper <a href="http://www.padsproj.org/papers/popl08.pdf">From Dirt to Shovels: Fully Automatic Tool Generation from Ad Hoc Data, by Fisher, Walker, Zhu, and White.  Published in POPL, 2008.</a>.  That paper itself draws on many papers in the area of information extraction and related fields.  The authors have released code for their system, written in ML.  ML is a great language, but is not well-suited to our needs: it is not supported by Avro, and is unlikely to appeal to many of the developers currently involved with the Hadoop ecosystem.<p>
 
   SchemaDictionary is more generally inspired by database schema mapping systems.  (A famous example is described in <a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.20.1842&rep=rep1&type=pdf">The Clio Project: Managing Heterogeneity, by Miller, Hernandez, Haas, Yan, Ho, Fagin, and Popa, published in SIGMOD Record 30(1), March 2001, pp.78-83</a>.)  Schema mapping systems are usually designed to help database administrators merge existing databases; for example, when company A purchases company B and must then merge the employee lists.  These tools are often expensive and expect a lot of administrator attention.  In contrast, our SchemaDictionary is for busy data analysts who simply want to check out a novel dataset as quickly as possible.  It is fast and simple, but can only handle relatively simple structures (rendering it inappropriate for databases, but on target for the kind of data that is popular in text-based formats).</p><p>
 
@@ -88,13 +88,13 @@ Imagine you have a simple file listing, stored in <tt>listing.txt</tt>:<p>
 
 We can now run our tools to automatically turn this text file into a structured Avro file.</p><p>
 
-</p><h3>LearnAvro</h3>
-We run the first component, LearnAvro, as follows:<p>
+</p><h3>LearnStructure</h3>
+We run the first component, LearnStructure, as follows:<p>
 <tt>
-$ bin/learnavro learn listing.txt outdir
+$ bin/learnstructure learn listing.txt outdir
 </tt></p><p>
 
-This tells the learnavro tool to learn the Avro structure found in <tt>listing.txt</tt>, and to write it out to the <tt>outdir</tt> directory.  <tt>outdir</tt> contains four files: <tt>schema.json</tt>, <tt>data.avro.json</tt>, <tt>data.avro</tt>, and <tt>parser.dat</tt>.</p><p>
+This tells the <tt>learnstructure</tt> tool to learn the Avro structure found in <tt>listing.txt</tt>, and to write it out to the <tt>outdir</tt> directory.  <tt>outdir</tt> contains four files: <tt>schema.json</tt>, <tt>data.avro.json</tt>, <tt>data.avro</tt>, and <tt>parser.dat</tt>.</p><p>
 
 The most interesting is probably <tt>schema.json</tt>, the program's attempt at building a JSON schema that describes the text data.  In the case of the example above, it looks like this:</p><p>
 <code>
@@ -171,7 +171,7 @@ The most interesting is probably <tt>schema.json</tt>, the program's attempt at 
 
 The JSON schema describes a record of several fields: an int, two strings, an int, a date, a time, and a final string.  These correspond to the number of links (int), the user owner (string), the group owner (string), the filesize (int), the modification stamp (date and time), and finally the filename (string).</p><p>
 
-Of course, the field names here are nonsense.  All of the values, except for subfields of the date and timestamp records, have nondescriptive synthetically-generated names.  The LearnAvro step attempts to recover the type of each field, but has no way to know its name or role.  Obtaining names for these fields is the job of the SchemaDictionary.  For now, we just live with these bad synthetic names.</p><p>
+Of course, the field names here are nonsense.  All of the values, except for subfields of the date and timestamp records, have nondescriptive synthetically-generated names.  The LearnStructure step attempts to recover the type of each field, but has no way to know its name or role.  Obtaining names for these fields is the job of the SchemaDictionary.  For now, we just live with these bad synthetic names.</p><p>
 
 Next, let's look at <tt>data.avro.json</tt>, a JSON-formatted version of the actual data.  The binary Avro version of this data is stored in <tt>data.avro</tt>.  The contents of <tt>data.avro.json</tt> look like this (I've added line breaks to make it more readable):</p><p>
 <tt>
@@ -183,15 +183,15 @@ Next, let's look at <tt>data.avro.json</tt>, a JSON-formatted version of the act
 
 The field names here match the contents of <tt>schema.json</tt>, and the values of those fields reflect the contents of <tt>listing.txt</tt>.</p><p>
 
-The final LearnAvro output file is <tt>parser.dat</tt>.  This is a binary representation of the parser generated by LearnAvro; the program applied this parser to <tt>listing.txt</tt> in order to obtain <tt>data.avro</tt> and <tt>data.avro.json</tt>.  If the user wants to process more data that has the same format as <tt>listing.txt</tt>, there's no need to relearn the structure; she can simply reapply the already-learned parser in <tt>parser.dat</tt>.</p><p>
+The final LearnStructure output file is <tt>parser.dat</tt>.  This is a binary representation of the parser generated by LearnStructure; the program applied this parser to <tt>listing.txt</tt> in order to obtain <tt>data.avro</tt> and <tt>data.avro.json</tt>.  If the user wants to process more data that has the same format as <tt>listing.txt</tt>, there's no need to relearn the structure; she can simply reapply the already-learned parser in <tt>parser.dat</tt>.</p><p>
 
 We're now ready to apply the SchemaDictionary component.</p><p>
 
 </p><h3>SchemaDictionary</h3>
 
-We now use the SchemaDictionary tool to find meaningful names for all the fields in data obtained by LearnAvro.  SchemaDictionary compares the structured but anonymous <tt>data.avro</tt> and <tt>schema.json</tt> against a large dictionary of known data types.  The SchemaDictionary tool then finds the closest match between the anonymous data and a dictionary entry, and uses that match to choose meaningful labels for the anonymous Avro fields.<p>
+We now use the SchemaDictionary tool to find meaningful names for all the fields in data obtained by LearnStructure.  SchemaDictionary compares the structured but anonymous <tt>data.avro</tt> and <tt>schema.json</tt> against a large dictionary of known data types.  The SchemaDictionary tool then finds the closest match between the anonymous data and a dictionary entry, and uses that match to choose meaningful labels for the anonymous Avro fields.<p>
 
-As long as the dictionary contains a dataset that is similar to the anonymous candidate data, then SchemaDictionary should be able to find a reasonable match.  We hope the number of data types tracked by SchemaDictionary quickly becomes large and diverse, allowing it to find labels for almost any text-embedded dataset that LearnAvro is likely to encounter.  A small set of data types is currently in the SchemaDictionary repository.</p><p>
+As long as the dictionary contains a dataset that is similar to the anonymous candidate data, then SchemaDictionary should be able to find a reasonable match.  We hope the number of data types tracked by SchemaDictionary quickly becomes large and diverse, allowing it to find labels for almost any text-embedded dataset that RecordBreaker is likely to encounter.  A small set of data types is currently in the SchemaDictionary repository.</p><p>
 
 Our first step is to add the data type samples from the repository into a "live" SchemaDictionary instance.  We can build a dictionary that contains these samples by typing in the following commands:</p><p>
 
@@ -222,7 +222,7 @@ Dictionary at schemaDict has 3 item(s).<br>
 This listing should confirm that <tt>schemaDict</tt> contains the three data types seen above.</p><p>
 
 </p><hr>
-We're now ready to use this dictionary to apply labels to our original file from LearnAvro.  Entering this command:<p>
+We're now ready to use this dictionary to apply labels to our original file from LearnStructure.  Entering this command:<p>
 
 <tt>bin/schemadict suggest schemaDict outdir/data.avro -d</tt></p><p>
 
@@ -308,18 +308,18 @@ Of course, in this case the tool has correctly guessed the closest entry in the 
 
 </p><h2>Future Work</h2>
 
-There is lots more work to do with LearnAvro.  Here are just a few of the items on the todo list:
+There is lots more work to do with RecordBreaker.  Here are just a few of the items on the todo list:
 <ul>
 <li>Attempt to construct a truly comprehensive schema dictionary, consisting of at least dozens and perhaps hundreds of examples.  The goal is for the user's data to have a near-relative in the schema dictionary the vast majority of the time.
 </li><li>The distance metric for matching anonymous data to known datatypes is relatively untested.  Its accuracy won't be truly known until we can get a larger set of schema dictionary elements
 </li><li>That said, there are a few SchemaDictionary items that could be improved.  It currently handles unions relatively poorly (or not at all, if the unions are at the root level).  There is also a problem in the label-assignment algorithm that makes certain types of assignments impossible to find, even if they would be very high-quality ones.
-</li><li>The LearnAvro component has been tested on a diverse handful of files, but probably has bugs lingering.  Testing it on a larger set of test textfiles would be good.
-</li><li>The whole reason for LearnAvro to exist is to speed up the process between receipt of a data file and analysis of that file.  Integrating it with existing Hadoop-based analysis tools would help with that process.
+</li><li>The LearnStructure component has been tested on a diverse handful of files, but probably has bugs lingering.  Testing it on a larger set of test textfiles would be good.
+</li><li>The whole reason for RecordBreaker to exist is to speed up the process between receipt of a data file and analysis of that file.  Integrating it with existing Hadoop-based analysis tools would help with that process.
 </li></ul>
 
 
 <h2>Dependencies</h2>
-<p>LearnAvro depends on a handful of relatively standard libraries.  The most obvious are the Avro and Hadoop projects, but there are many others.</p>
+<p>RecordBreaker depends on a handful of relatively standard libraries.  The most obvious are the Avro and Hadoop projects, but there are many others.</p>
 
 <h2>Install</h2>
 <p>Untar or unzip the package and type <code>ant</code> to build it.</p>
@@ -330,7 +330,7 @@ There is lots more work to do with LearnAvro.  Here are just a few of the items 
 <br>
 <br>      </p>
 <h2>Acknowledgments</h2>
-LearnAvro would not be possible without the efforts of all the people behind Hadoop, Avro, and several other open source projects.  It also owes an intellectual debt to Kathleen Fisher, David Walker, Kenny Q. Zhu, and Peter White, the authors of the terrific paper cited above.<p>
+RecordBreaker would not be possible without the efforts of all the people behind Hadoop, Avro, and several other open source projects.  It also owes an intellectual debt to Kathleen Fisher, David Walker, Kenny Q. Zhu, and Peter White, the authors of the terrific paper cited above.<p>
 </p><h2>Contact</h2>
 <p>Mike Cafarella (michjc@umich.edu)
 <br>
@@ -341,16 +341,16 @@ LearnAvro would not be possible without the efforts of all the people behind Had
     <h2>Download</h2>
     <p>
       You can download this project in either
-      <a href="http://github.com/cloudera/LearnAvro/zipball/master">zip</a> or
-      <a href="http://github.com/cloudera/LearnAvro/tarball/master">tar</a> formats.
+      <a href="http://github.com/cloudera/RecordBreaker/zipball/master">zip</a> or
+      <a href="http://github.com/cloudera/RecordBreaker/tarball/master">tar</a> formats.
     </p>
     <p>You can also clone the project with <a href="http://git-scm.com/">Git</a>
       by running:
-      </p><pre>$ git clone git://github.com/cloudera/LearnAvro</pre>
+      </p><pre>$ git clone git://github.com/cloudera/RecordBreaker</pre>
     <p></p>
 
     <div class="footer">
-      get the source code on GitHub : <a href="http://github.com/cloudera/LearnAvro">cloudera/LearnAvro</a>
+      get the source code on GitHub : <a href="http://github.com/cloudera/RecordBreaker">cloudera/RecordBreaker</a>
     </div>
 
   </div>
