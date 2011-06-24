@@ -12,7 +12,7 @@
  * the specific language governing permissions and limitations under the
  * License.
  */
-package com.cloudera.learnavro;
+package com.cloudera.recordbreaker.learnstructure;
 
 import java.io.*;
 import java.util.*;
@@ -24,14 +24,14 @@ import org.apache.avro.generic.GenericContainer;
 import org.apache.avro.generic.GenericDatumWriter;
 
 /*********************************************************
- * LearnAvro is the main file for figuring out pattern-extractors and schemas for a text file.
+ * LearnStructure is the main file for figuring out pattern-extractors and schemas for a text file.
  *
  * This code operates on a raw text file and emits the extractors/schemas.  The user
  * may decide to remove certain extractors/schemas if they only apply to a tiny number of
  * potential lines in the target text file.
  *
  *********************************************************/
-public class LearnAvro {
+public class LearnStructure {
   static String SCHEMA_FILENAME = "schema.json";
   static String JSONDATA_FILENAME = "data.avro.json";
   static String DATA_FILENAME = "data.avro";
@@ -174,7 +174,7 @@ public class LearnAvro {
   //////////////////////////////////////////
   public static void main(String argv[]) throws IOException {
     if (argv.length < 2) {
-      System.err.println("Usage: LearnAvro <input-datafile> <outdir> (-emitAvro (true)|false)");
+      System.err.println("Usage: LearnStructure <input-datafile> <outdir> (-emitAvro (true)|false)");
       return;
     }
     boolean emitAvro = true;
@@ -195,8 +195,8 @@ public class LearnAvro {
     }
     outdir.mkdirs();
 
-    LearnAvro la = new LearnAvro();
-    RecordFormat rf = la.inferRecordFormat(f, outdir, emitAvro);
+    LearnStructure ls = new LearnStructure();
+    RecordFormat rf = ls.inferRecordFormat(f, outdir, emitAvro);
     //System.err.println("RecordFormat: " + rf);
   }
 }

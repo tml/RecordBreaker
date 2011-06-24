@@ -1,4 +1,4 @@
-package com.cloudera.schemadict;
+package com.cloudera.recordbreaker.schemadict;
 
 import java.util.Random;
 

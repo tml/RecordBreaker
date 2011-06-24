@@ -12,7 +12,7 @@
  * the specific language governing permissions and limitations under the
  * License.
  */
-package com.cloudera.schemadict;
+package com.cloudera.recordbreaker.schemadict;
 
 /*****************************************************
  * DictionaryMapping is a SchemaMapping that includes a SchemaDictionary item.
