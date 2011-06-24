@@ -40,7 +40,7 @@ public class LearnStructure {
   /**
    *
    */
-  public RecordFormat inferRecordFormat(File f, File outdir, boolean emitAvro) throws IOException {
+  public void inferRecordFormat(File f, File outdir, boolean emitAvro) throws IOException {
     File schemaFile = new File(outdir, SCHEMA_FILENAME);
     File jsonDataFile = new File(outdir, JSONDATA_FILENAME);
     File dataFile = new File(outdir, DATA_FILENAME);
@@ -165,8 +165,6 @@ public class LearnStructure {
       System.err.println("Total # input lines: " + lineno);
       System.err.println("Total # lines parsed correctly: " + numGoodParses);
     }
-
-    return null;
   }
 
   //////////////////////////////////////////
@@ -196,7 +194,6 @@ public class LearnStructure {
     outdir.mkdirs();
 
     LearnStructure ls = new LearnStructure();
-    RecordFormat rf = ls.inferRecordFormat(f, outdir, emitAvro);
-    //System.err.println("RecordFormat: " + rf);
+    ls.inferRecordFormat(f, outdir, emitAvro);
   }
 }
