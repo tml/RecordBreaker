@@ -101,7 +101,7 @@ shift
 if [ "$CMD" = "-h" ] ; then
   usage
 elif [ "$CMD" = "learn" ] ; then
-  exec java $JOPTS $UOPTS -classpath "$CLASSPATH" com.cloudera.recordbreaker.structure.LearnStructure "$@"
+  exec java $JOPTS $UOPTS -classpath "$CLASSPATH" com.cloudera.recordbreaker.learnstructure.LearnStructure "$@"
 elif [ "$CMD" = "class" ]; then
   # Just do a java class with the environment setup
   exec java $JOPTS $UOPTS -classpath "$CLASSPATH" "$@"
