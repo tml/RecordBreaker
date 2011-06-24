@@ -1,11 +1,11 @@
 #!/usr/bin/env /bin/bash
 
 ##
-# This script runs core learnavro commands.  It sets up the jar files, paths, etc.
+# This script runs core learnstructure commands.  It sets up the jar files, paths, etc.
 #
 #
 function usage {
-  echo "usage: learnavro command [args...]"
+  echo "usage: learnstructure command [args...]"
   echo "Commands include: "
   echo " <learn>             Learn the schema for a given datafile"
   exit -1
@@ -15,7 +15,7 @@ CMDPATH=`dirname $0`
 # name of path
 CMDPATH=`dirname $CMDPATH`
 
-LEARNAVRO=$CMDPATH/bin/learnavro
+LEARNSTRUCTURE=$CMDPATH/bin/learnstructure
 
 CMD="$1"
 if [ -z "$CMD" ]; then
@@ -52,8 +52,8 @@ if [ -f "${BINPATH}/schemadict-env.sh" ]; then
     source "$BINPATH/schemadict-env.sh"
 fi
 
-if [ -z "LEARNAVRO_HOME" ]; then
-    export LEARNAVRO_HOME="$CMDPATH"
+if [ -z "RECORDBREAKER_HOME" ]; then
+    export RECORDBREAKER_HOME="$CMDPATH"
 fi
 
 if [ "$cygwin" == false ] ; then
@@ -62,13 +62,13 @@ if [ "$cygwin" == false ] ; then
   # conf dir first in the class path in order to ensure we get flume log4j.properties
   CLASSPATH=""
 
-  if [ -n "LEARNAVRO_CLASSPATH" ]; then
-      CLASSPATH+=":${LEARNAVRO_CLASSPATH}"
+  if [ -n "RECORDBREAKER_CLASSPATH" ]; then
+      CLASSPATH+=":${RECORDBREAKER_CLASSPATH}"
   fi
 
   JOPTS+="-Djava.library.path=$CMDPATH/build/test:$CMDPATH/build"
 
-  append_jars_onto_classpath "$CMDPATH/build/ivy/lib/learnavro/default"
+  append_jars_onto_classpath "$CMDPATH/build/ivy/lib/recordbreaker/default"
   append_jars_onto_classpath "$CMDPATH/build"
 
   CLASSPATH+=":$JAVA_HOME/lib/tools.jar"
@@ -77,7 +77,7 @@ if [ "$cygwin" == false ] ; then
 
   append_jars_onto_classpath "${CMDPATH/build}"
   append_jars_onto_classpath "${CMDPATH/build/test}"
-  append_jars_onto_classpath "${LEARNAVRO_HOME}"
+  append_jars_onto_classpath "${RECORDBREAKER_HOME}"
 else
   # windows with cygwin
   JOPTS+="-Djava.library.path=`cygpath -d $CMDPATH/lib` "
@@ -101,7 +101,7 @@ shift
 if [ "$CMD" = "-h" ] ; then
   usage
 elif [ "$CMD" = "learn" ] ; then
-  exec java $JOPTS $UOPTS -classpath "$CLASSPATH" com.cloudera.learnavro.LearnAvro "$@"
+  exec java $JOPTS $UOPTS -classpath "$CLASSPATH" com.cloudera.recordbreaker.structure.LearnStructure "$@"
 elif [ "$CMD" = "class" ]; then
   # Just do a java class with the environment setup
   exec java $JOPTS $UOPTS -classpath "$CLASSPATH" "$@"
