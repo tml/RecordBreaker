@@ -28,6 +28,8 @@
       <dependency org="log4j" name="log4j" rev="${log4j.version}" />
       <dependency org="org.apache.avro" name="avro" rev="${avro.version}" />
       <dependency org="org.apache.hadoop" name="hadoop-core" rev="0.20.2" />
+      <dependency org="org.apache.rat" name="apache-rat-tasks" rev="0.7" />
+      <dependency org="org.apache.rat" name="apache-rat" rev="0.7" />
 
       <exclude org="ant-eclipse" module="ant-eclipse" />
     </dependencies>
