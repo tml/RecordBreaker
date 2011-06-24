@@ -1,13 +1,13 @@
-LearnAvro - Automatic structure for your HDFS data
+RecordBreaker - Automatically learn Avro structures from your data
 ========================================================================================
 
 Introduction
 ----------------------------------------------------------------------------------------
-LearnAvro is a project that automatically turns your text-formatted data (logs, sensor readings, etc) into structured Avro data, without any need to write parsers or extractors.  Its goal is to dramatically reduce the time spent preparing data for analysis, enabling more time for the analysis itself.
+RecordBreaker is a project that automatically turns your text-formatted data (server logs, sensor readings, etc) into structured Avro data, without any need to write parsers or extractors.  Its goal is to dramatically reduce the time spent preparing data for analysis, enabling more time for the analysis itself.
 
-You can (and should!) read the full LearnAvro tutorial here: [http://cloudera.github.com/LearnAvro/](http://cloudera.github.com/LearnAvro/)
+You can (and should!) read the full RecordBreaker tutorial here: [http://cloudera.github.com/RecordBreaker/](http://cloudera.github.com/RecordBreaker/)
 
-The LearnAvro repository is hosted at GitHub, here: [https://github.com/cloudera/LearnAvro](https://github.com/cloudera/LearnAvro)
+The RecordBreaker repository is hosted at GitHub, here: [https://github.com/cloudera/RecordBreaker](https://github.com/cloudera/RecordBreaker)
 
 Installation
 ----------------------------------------------------------------------------------------
